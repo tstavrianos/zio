@@ -203,62 +203,6 @@ namespace Zio
         }
 
         /// <summary>
-        ///     Opens a binary file, reads the contents of the file into a byte array, and then closes the file.
-        /// </summary>
-        /// <param name="fs">The filesystem.</param>
-        /// <param name="path">The path of the file to open for reading.</param>
-        /// <returns>A byte array containing the contents of the file.</returns>
-        public static byte[] ReadAllBytes(this IFileSystem fs, UPath path)
-        {
-            var memstream = new MemoryStream();
-            using (var stream = fs.OpenFile(path, FileMode.Open, FileAccess.Read, FileShare.Read))
-            {
-                stream.CopyTo(memstream);
-            }
-            return memstream.ToArray();
-        }
-
-        /// <summary>
-        ///     Opens a file, reads all lines of the file with the specified encoding, and then closes the file.
-        /// </summary>
-        /// <param name="fs">The filesystem.</param>
-        /// <param name="path">The path of the file to open for reading.</param>
-        /// <returns>A string containing all lines of the file.</returns>
-        /// <remarks>
-        ///     This method attempts to automatically detect the encoding of a file based on the presence of byte order marks.
-        ///     Encoding formats UTF-8 and UTF-32 (both big-endian and little-endian) can be detected.
-        /// </remarks>
-        public static string ReadAllText(this IFileSystem fs, UPath path)
-        {
-            var stream = fs.OpenFile(path, FileMode.Open, FileAccess.Read, FileShare.Read);
-            {
-                using (var reader = new StreamReader(stream))
-                {
-                    return reader.ReadToEnd();
-                }
-            }
-        }
-
-        /// <summary>
-        ///     Opens a file, reads all lines of the file with the specified encoding, and then closes the file.
-        /// </summary>
-        /// <param name="fs">The filesystem.</param>
-        /// <param name="path">The path of the file to open for reading.</param>
-        /// <param name="encoding">The encoding to use to decode the text from <paramref name="path" />.</param>
-        /// <returns>A string containing all lines of the file.</returns>
-        public static string ReadAllText(this IFileSystem fs, UPath path, Encoding encoding)
-        {
-            if (encoding == null) throw new ArgumentNullException(nameof(encoding));
-            var stream = fs.OpenFile(path, FileMode.Open, FileAccess.Read, FileShare.Read);
-            {
-                using (var reader = new StreamReader(stream, encoding))
-                {
-                    return reader.ReadToEnd();
-                }
-            }
-        }
-
-        /// <summary>
         ///     Creates a new file, writes the specified byte array to the file, and then closes the file.
         ///     If the target file already exists, it is overwritten.
         /// </summary>
@@ -279,57 +223,7 @@ namespace Zio
             }
         }
 
-        /// <summary>
-        ///     Opens a file, reads all lines of the file with the specified encoding, and then closes the file.
-        /// </summary>
-        /// <param name="fs">The filesystem.</param>
-        /// <param name="path">The path of the file to open for reading.</param>
-        /// <returns>An array of strings containing all lines of the file.</returns>
-        public static string[] ReadAllLines(this IFileSystem fs, UPath path)
-        {
-            var stream = fs.OpenFile(path, FileMode.Open, FileAccess.Read, FileShare.Read);
-            {
-                using (var reader = new StreamReader(stream))
-                {
-                    var lines = new List<string>();
-                    string line;
-                    while ((line = reader.ReadLine()) != null)
-                    {
-                        lines.Add(line);
-                    }
-                    return lines.ToArray();
-                }
-            }
-        }
-
-        /// <summary>
-        ///     Opens a file, reads all lines of the file with the specified encoding, and then closes the file.
-        /// </summary>
-        /// <param name="fs">The filesystem.</param>
-        /// <param name="path">The path of the file to open for reading.</param>
-        /// <param name="encoding">The encoding to use to decode the text from <paramref name="path" />.</param>
-        /// <remarks>
-        ///     This method attempts to automatically detect the encoding of a file based on the presence of byte order marks.
-        ///     Encoding formats UTF-8 and UTF-32 (both big-endian and little-endian) can be detected.
-        /// </remarks>
-        /// <returns>An array of strings containing all lines of the file.</returns>
-        public static string[] ReadAllLines(this IFileSystem fs, UPath path, Encoding encoding)
-        {
-            if (encoding == null) throw new ArgumentNullException(nameof(encoding));
-            var stream = fs.OpenFile(path, FileMode.Open, FileAccess.Read, FileShare.Read);
-            {
-                using (var reader = new StreamReader(stream, encoding))
-                {
-                    var lines = new List<string>();
-                    string line;
-                    while ((line = reader.ReadLine()) != null)
-                    {
-                        lines.Add(line);
-                    }
-                    return lines.ToArray();
-                }
-            }
-        }
+        
 
         /// <summary>
         ///     Creates a new file, writes the specified string to the file, and then closes the file.
@@ -343,7 +237,7 @@ namespace Zio
         ///     This method uses UTF-8 encoding without a Byte-Order Mark (BOM), so using the GetPreamble method will return an
         ///     empty byte array.
         ///     If it is necessary to include a UTF-8 identifier, such as a byte order mark, at the beginning of a file,
-        ///     use the <see cref="WriteAllText(Zio.IFileSystem,Zio.UPath,string, Encoding)" /> method overload with UTF8 encoding.
+        ///     use the <see cref="WriteAllText(mgRogue.VFS.IFileSystem,mgRogue.VFS.UPath,string,System.Text.Encoding)" /> method overload with UTF8 encoding.
         /// </remarks>
         public static void WriteAllText(this IFileSystem fs, UPath path, string content)
         {
@@ -454,145 +348,6 @@ namespace Zio
         }
 
         /// <summary>
-        /// Returns an enumerable collection of directory names in a specified path.
-        /// </summary>
-        /// <param name="fileSystem">The file system.</param>
-        /// <param name="path">The path of the directory to look for directories.</param>
-        /// <returns>An enumerable collection of the full names (including paths) for the directories in the directory specified by path.</returns>
-        public static IEnumerable<UPath> EnumerateDirectories(this IFileSystem fileSystem, UPath path)
-        {
-            return EnumerateDirectories(fileSystem, path, "*");
-        }
-
-        /// <summary>
-        /// Returns an enumerable collection of directory names that match a search pattern in a specified path.
-        /// </summary>
-        /// <param name="fileSystem">The file system.</param>
-        /// <param name="path">The path of the directory to look for directories.</param>
-        /// <param name="searchPattern">The search string to match against the names of directories in path. This parameter can contain a combination 
-        /// of valid literal path and wildcard (* and ?) characters (see Remarks), but doesn't support regular expressions.</param>
-        /// <returns>An enumerable collection of the full names (including paths) for the directories in the directory specified by path.</returns>
-        public static IEnumerable<UPath> EnumerateDirectories(this IFileSystem fileSystem, UPath path, string searchPattern)
-        {
-            if (searchPattern == null) throw new ArgumentNullException(nameof(searchPattern));
-            return EnumerateDirectories(fileSystem, path, searchPattern, SearchOption.TopDirectoryOnly);
-        }
-
-        /// <summary>
-        /// Returns an enumerable collection of directory names that match a search pattern in a specified path, and optionally searches subdirectories.
-        /// </summary>
-        /// <param name="fileSystem">The file system.</param>
-        /// <param name="path">The path of the directory to look for directories.</param>
-        /// <param name="searchPattern">The search string to match against the names of directories in path. This parameter can contain a combination 
-        /// of valid literal path and wildcard (* and ?) characters (see Remarks), but doesn't support regular expressions.</param>
-        /// <param name="searchOption">One of the enumeration values that specifies whether the search operation should include only the current directory 
-        /// or should include all subdirectories.
-        /// The default value is TopDirectoryOnly.</param>
-        /// <returns>An enumerable collection of the full names (including paths) for the directories in the directory specified by path.</returns>
-        public static IEnumerable<UPath> EnumerateDirectories(this IFileSystem fileSystem, UPath path, string searchPattern, SearchOption searchOption)
-        {
-            if (searchPattern == null) throw new ArgumentNullException(nameof(searchPattern));
-            foreach (var subPath in fileSystem.EnumeratePaths(path, searchPattern, searchOption, SearchTarget.Directory))
-                yield return subPath;
-        }
-
-        /// <summary>
-        /// Returns an enumerable collection of file names in a specified path.
-        /// </summary>
-        /// <param name="fileSystem">The file system.</param>
-        /// <param name="path">The path of the directory to look for files.</param>
-        /// <returns>An enumerable collection of the full names (including paths) for the files in the directory specified by path.</returns>
-        public static IEnumerable<UPath> EnumerateFiles(this IFileSystem fileSystem, UPath path)
-        {
-            return EnumerateFiles(fileSystem, path, "*");
-        }
-
-        /// <summary>
-        /// Returns an enumerable collection of file names that match a search pattern in a specified path.
-        /// </summary>
-        /// <param name="fileSystem">The file system.</param>
-        /// <param name="path">The path of the directory to look for files.</param>
-        /// <param name="searchPattern">The search string to match against the names of directories in path. This parameter can contain a combination 
-        /// of valid literal path and wildcard (* and ?) characters (see Remarks), but doesn't support regular expressions.</param>
-        /// <returns>An enumerable collection of the full names (including paths) for the files in the directory specified by path.</returns>
-        public static IEnumerable<UPath> EnumerateFiles(this IFileSystem fileSystem, UPath path, string searchPattern)
-        {
-            if (searchPattern == null) throw new ArgumentNullException(nameof(searchPattern));
-            return EnumerateFiles(fileSystem, path, searchPattern, SearchOption.TopDirectoryOnly);
-        }
-
-        /// <summary>
-        /// Returns an enumerable collection of file names in a specified path.
-        /// </summary>
-        /// <param name="fileSystem">The file system.</param>
-        /// <param name="path">The path of the directory to look for files.</param>
-        /// <param name="searchPattern">The search string to match against the names of directories in path. This parameter can contain a combination 
-        /// of valid literal path and wildcard (* and ?) characters (see Remarks), but doesn't support regular expressions.</param>
-        /// <param name="searchOption">One of the enumeration values that specifies whether the search operation should include only the current directory 
-        /// or should include all subdirectories.
-        /// The default value is TopDirectoryOnly.</param>
-        /// <returns>An enumerable collection of the full names (including paths) for the files in the directory specified by path.</returns>
-        public static IEnumerable<UPath> EnumerateFiles(this IFileSystem fileSystem, UPath path, string searchPattern, SearchOption searchOption)
-        {
-            if (searchPattern == null) throw new ArgumentNullException(nameof(searchPattern));
-            foreach (var subPath in fileSystem.EnumeratePaths(path, searchPattern, searchOption, SearchTarget.File))
-                yield return subPath;
-        }
-
-        /// <summary>
-        /// Returns an enumerable collection of file or directory names in a specified path.
-        /// </summary>
-        /// <param name="fileSystem">The file system.</param>
-        /// <param name="path">The path of the directory to look for files or directories.</param>
-        /// <returns>An enumerable collection of the full names (including paths) for the files and directories in the directory specified by path.</returns>
-        public static IEnumerable<UPath> EnumeratePaths(this IFileSystem fileSystem, UPath path)
-        {
-            return EnumeratePaths(fileSystem, path, "*");
-        }
-
-        /// <summary>
-        /// Returns an enumerable collection of file or directory names in a specified path.
-        /// </summary>
-        /// <param name="fileSystem">The file system.</param>
-        /// <param name="path">The path of the directory to look for files or directories.</param>
-        /// <param name="searchPattern">The search string to match against the names of directories in path. This parameter can contain a combination 
-        /// of valid literal path and wildcard (* and ?) characters (see Remarks), but doesn't support regular expressions.</param>
-        /// <returns>An enumerable collection of the full names (including paths) for the files and directories in the directory specified by path.</returns>
-        public static IEnumerable<UPath> EnumeratePaths(this IFileSystem fileSystem, UPath path, string searchPattern)
-        {
-            if (searchPattern == null) throw new ArgumentNullException(nameof(searchPattern));
-            return EnumeratePaths(fileSystem, path, searchPattern, SearchOption.TopDirectoryOnly);
-        }
-
-        /// <summary>
-        /// Returns an enumerable collection of file or directory names in a specified path.
-        /// </summary>
-        /// <param name="fileSystem">The file system.</param>
-        /// <param name="path">The path of the directory to look for files or directories.</param>
-        /// <param name="searchPattern">The search string to match against the names of directories in path. This parameter can contain a combination 
-        /// of valid literal path and wildcard (* and ?) characters (see Remarks), but doesn't support regular expressions.</param>
-        /// <param name="searchOption">One of the enumeration values that specifies whether the search operation should include only the current directory 
-        /// or should include all subdirectories.
-        /// The default value is TopDirectoryOnly.</param>
-        /// <returns>An enumerable collection of the full names (including paths) for the files and directories in the directory specified by path.</returns>
-        public static IEnumerable<UPath> EnumeratePaths(this IFileSystem fileSystem, UPath path, string searchPattern, SearchOption searchOption)
-        {
-            if (searchPattern == null) throw new ArgumentNullException(nameof(searchPattern));
-            return fileSystem.EnumeratePaths(path, searchPattern, searchOption, SearchTarget.Both);
-        }
-
-        /// <summary>
-        /// Returns an enumerable collection of <see cref="FileEntry"/> that match a search pattern in a specified path.
-        /// </summary>
-        /// <param name="fileSystem">The file system.</param>
-        /// <param name="path">The path of the directory to look for files.</param>
-        /// <returns>An enumerable collection of <see cref="FileEntry"/> from the specified path.</returns>
-        public static IEnumerable<FileEntry> EnumerateFileEntries(this IFileSystem fileSystem, UPath path)
-        {
-            return EnumerateFileEntries(fileSystem, path, "*");
-        }
-
-        /// <summary>
         /// Returns an enumerable collection of <see cref="FileEntry"/> that match a search pattern in a specified path.
         /// </summary>
         /// <param name="fileSystem">The file system.</param>
@@ -600,7 +355,7 @@ namespace Zio
         /// <param name="searchPattern">The search string to match against the names of directories in path. This parameter can contain a combination 
         /// of valid literal path and wildcard (* and ?) characters (see Remarks), but doesn't support regular expressions.</param>
         /// <returns>An enumerable collection of <see cref="FileEntry"/> from the specified path.</returns>
-        public static IEnumerable<FileEntry> EnumerateFileEntries(this IFileSystem fileSystem, UPath path, string searchPattern)
+        public static IEnumerable<FileEntry> EnumerateFileEntries(this IFileSystem fileSystem, UPath path, string searchPattern = "*")
         {
             if (searchPattern == null) throw new ArgumentNullException(nameof(searchPattern));
             return EnumerateFileEntries(fileSystem, path, searchPattern, SearchOption.TopDirectoryOnly);
@@ -620,7 +375,7 @@ namespace Zio
         public static IEnumerable<FileEntry> EnumerateFileEntries(this IFileSystem fileSystem, UPath path, string searchPattern, SearchOption searchOption)
         {
             if (searchPattern == null) throw new ArgumentNullException(nameof(searchPattern));
-            foreach (var subPath in EnumerateFiles(fileSystem, path, searchPattern, searchOption))
+            foreach (var subPath in fileSystem.EnumerateFiles(path, searchPattern, searchOption))
             {
                 yield return new FileEntry(fileSystem, subPath);
             }
@@ -631,21 +386,10 @@ namespace Zio
         /// </summary>
         /// <param name="fileSystem">The file system.</param>
         /// <param name="path">The path of the directory to look for directories.</param>
-        /// <returns>An enumerable collection of <see cref="DirectoryEntry"/> from the specified path.</returns>
-        public static IEnumerable<DirectoryEntry> EnumerateDirectoryEntries(this IFileSystem fileSystem, UPath path)
-        {
-            return EnumerateDirectoryEntries(fileSystem, path, "*");
-        }
-
-        /// <summary>
-        /// Returns an enumerable collection of <see cref="DirectoryEntry"/> that match a search pattern in a specified path.
-        /// </summary>
-        /// <param name="fileSystem">The file system.</param>
-        /// <param name="path">The path of the directory to look for directories.</param>
         /// <param name="searchPattern">The search string to match against the names of directories in path. This parameter can contain a combination 
         /// of valid literal path and wildcard (* and ?) characters (see Remarks), but doesn't support regular expressions.</param>
         /// <returns>An enumerable collection of <see cref="DirectoryEntry"/> from the specified path.</returns>
-        public static IEnumerable<DirectoryEntry> EnumerateDirectoryEntries(this IFileSystem fileSystem, UPath path, string searchPattern)
+        public static IEnumerable<DirectoryEntry> EnumerateDirectoryEntries(this IFileSystem fileSystem, UPath path, string searchPattern = "*")
         {
             if (searchPattern == null) throw new ArgumentNullException(nameof(searchPattern));
             return EnumerateDirectoryEntries(fileSystem, path, searchPattern, SearchOption.TopDirectoryOnly);
@@ -665,7 +409,7 @@ namespace Zio
         public static IEnumerable<DirectoryEntry> EnumerateDirectoryEntries(this IFileSystem fileSystem, UPath path, string searchPattern, SearchOption searchOption)
         {
             if (searchPattern == null) throw new ArgumentNullException(nameof(searchPattern));
-            foreach (var subPath in EnumerateDirectories(fileSystem, path, searchPattern, searchOption))
+            foreach (var subPath in fileSystem.EnumerateDirectories(path, searchPattern, searchOption))
             {
                 yield return new DirectoryEntry(fileSystem, subPath);
             }
@@ -676,21 +420,10 @@ namespace Zio
         /// </summary>
         /// <param name="fileSystem">The file system.</param>
         /// <param name="path">The path of the directory to look for files and directories.</param>
-        /// <returns>An enumerable collection of <see cref="FileSystemEntry"/> that match a search pattern in a specified path.</returns>
-        public static IEnumerable<FileSystemEntry> EnumerateFileSystemEntries(this IFileSystem fileSystem, UPath path)
-        {
-            return EnumerateFileSystemEntries(fileSystem, path, "*");
-        }
-
-        /// <summary>
-        /// Returns an enumerable collection of <see cref="FileSystemEntry"/> that match a search pattern in a specified path.
-        /// </summary>
-        /// <param name="fileSystem">The file system.</param>
-        /// <param name="path">The path of the directory to look for files and directories.</param>
         /// <param name="searchPattern">The search string to match against the names of directories in path. This parameter can contain a combination 
         /// of valid literal path and wildcard (* and ?) characters (see Remarks), but doesn't support regular expressions.</param>
         /// <returns>An enumerable collection of <see cref="FileSystemEntry"/> that match a search pattern in a specified path.</returns>
-        public static IEnumerable<FileSystemEntry> EnumerateFileSystemEntries(this IFileSystem fileSystem, UPath path, string searchPattern)
+        public static IEnumerable<FileSystemEntry> EnumerateFileSystemEntries(this IFileSystem fileSystem, UPath path, string searchPattern = "*")
         {
             if (searchPattern == null) throw new ArgumentNullException(nameof(searchPattern));
             return EnumerateFileSystemEntries(fileSystem, path, searchPattern, SearchOption.TopDirectoryOnly);
@@ -753,12 +486,7 @@ namespace Zio
                 return new FileEntry(fileSystem, path);
             }
             var directoryExists = fileSystem.DirectoryExists(path);
-            if (directoryExists)
-            {
-                return new DirectoryEntry(fileSystem, path);
-            }
-
-            return null;
+            return directoryExists ? new DirectoryEntry(fileSystem, path) : null;
         }
 
         /// <summary>
@@ -799,12 +527,7 @@ namespace Zio
         /// <returns>An <see cref="IFileSystemWatcher"/> instance or null if not supported.</returns>
         public static IFileSystemWatcher TryWatch(this IFileSystem fileSystem, UPath path)
         {
-            if (!fileSystem.CanWatch(path))
-            {
-                return null;
-            }
-
-            return fileSystem.Watch(path);
+            return !fileSystem.CanWatch(path) ? null : fileSystem.Watch(path);
         }
     }
 }
