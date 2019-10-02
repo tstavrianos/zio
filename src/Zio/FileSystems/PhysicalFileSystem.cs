@@ -18,25 +18,7 @@ namespace Zio.FileSystems
     {
         private const string DrivePrefixOnWindows = "/mnt/";
         private static readonly UPath PathDrivePrefixOnWindows = new UPath(DrivePrefixOnWindows);
-#if NETSTANDARD
         private static readonly bool IsOnWindows = RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
-#else
-        private static readonly bool IsOnWindows = CheckIsOnWindows();
-
-        private static bool CheckIsOnWindows()
-        {
-            switch (Environment.OSVersion.Platform)
-            {
-                case PlatformID.Xbox:
-                case PlatformID.Win32NT:
-                case PlatformID.Win32S:
-                case PlatformID.Win32Windows:
-                case PlatformID.WinCE:
-                    return true;
-            }
-            return false;
-        }
-#endif
 
         // ----------------------------------------------
         // Directory API
