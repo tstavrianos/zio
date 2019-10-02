@@ -276,6 +276,12 @@ namespace Zio.FileSystems
             return OpenFileImpl(ValidatePath(path), mode, access, share);
         }
 
+        /// <inheritdoc />
+        public Stream OpenRead(UPath path)
+        {
+            return OpenFile(path, FileMode.Open, FileAccess.Read, FileShare.Read);
+        }
+
         /// <summary>
         /// Implementation for <see cref="OpenFile"/>, <paramref name="path"/> is guaranteed to be absolute and validated through <see cref="ValidatePath"/>.
         /// Opens a file <see cref="Stream"/> on the specified path, having the specified mode with read, write, or read/write access and the specified sharing option.
@@ -571,6 +577,11 @@ namespace Zio.FileSystems
             IsDisposing = true;
             Dispose(disposing);
             IsDisposed = true;
+        }
+
+        public IReadOnlyFileSystem AsReadOnly()
+        {
+            return this;
         }
     }
 }
