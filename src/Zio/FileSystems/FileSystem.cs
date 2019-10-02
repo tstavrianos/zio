@@ -26,13 +26,13 @@ namespace Zio.FileSystems
         /// </summary>
         ~FileSystem()
         {
-            DisposeInternal(false);
+            this.DisposeInternal(false);
         }
 
         /// <inheritdoc />
         public void Dispose()
         {
-            DisposeInternal(true);
+            this.DisposeInternal(true);
             GC.SuppressFinalize(this);
         }
 
@@ -53,12 +53,13 @@ namespace Zio.FileSystems
         /// <inheritdoc />
         public void CreateDirectory(UPath path)
         {
-            AssertNotDisposed();
+            this.AssertNotDisposed();
             if (path == UPath.Root)
             {
                 throw new UnauthorizedAccessException("Cannot create root directory `/`");
             }
-            CreateDirectoryImpl(ValidatePath(path));
+
+            this.CreateDirectoryImpl(this.ValidatePath(path));
         }
 
         /// <summary>
@@ -72,7 +73,7 @@ namespace Zio.FileSystems
         /// <inheritdoc />
         public bool DirectoryExists(UPath path)
         {
-            AssertNotDisposed();
+            this.AssertNotDisposed();
 
             // With FileExists, case where a null path is allowed
             if (path.IsNull)
@@ -80,7 +81,7 @@ namespace Zio.FileSystems
                 return false;
             }
 
-            return DirectoryExistsImpl(ValidatePath(path));
+            return this.DirectoryExistsImpl(this.ValidatePath(path));
         }
 
         /// <summary>
@@ -94,7 +95,7 @@ namespace Zio.FileSystems
         /// <inheritdoc />
         public void MoveDirectory(UPath srcPath, UPath destPath)
         {
-            AssertNotDisposed();
+            this.AssertNotDisposed();
             if (srcPath == UPath.Root)
             {
                 throw new UnauthorizedAccessException("Cannot move from the source root directory `/`");
@@ -109,7 +110,7 @@ namespace Zio.FileSystems
                 throw new IOException($"The source and destination path are the same `{srcPath}`");
             }
 
-            MoveDirectoryImpl(ValidatePath(srcPath, nameof(srcPath)), ValidatePath(destPath, nameof(destPath)));
+            this.MoveDirectoryImpl(this.ValidatePath(srcPath, nameof(srcPath)), this.ValidatePath(destPath, nameof(destPath)));
         }
 
         /// <summary>
@@ -124,13 +125,13 @@ namespace Zio.FileSystems
         /// <inheritdoc />
         public void DeleteDirectory(UPath path, bool isRecursive)
         {
-            AssertNotDisposed();
+            this.AssertNotDisposed();
             if (path == UPath.Root)
             {
                 throw new UnauthorizedAccessException("Cannot delete root directory `/`");
             }
 
-            DeleteDirectoryImpl(ValidatePath(path), isRecursive);
+            this.DeleteDirectoryImpl(this.ValidatePath(path), isRecursive);
         }
 
         /// <summary>
@@ -148,8 +149,8 @@ namespace Zio.FileSystems
         /// <inheritdoc />
         public void CopyFile(UPath srcPath, UPath destPath, bool overwrite)
         {
-            AssertNotDisposed();
-            CopyFileImpl(ValidatePath(srcPath, nameof(srcPath)), ValidatePath(destPath, nameof(destPath)), overwrite);
+            this.AssertNotDisposed();
+            this.CopyFileImpl(this.ValidatePath(srcPath, nameof(srcPath)), this.ValidatePath(destPath, nameof(destPath)), overwrite);
         }
 
         /// <summary>
@@ -165,17 +166,17 @@ namespace Zio.FileSystems
         /// <inheritdoc />
         public void ReplaceFile(UPath srcPath, UPath destPath, UPath destBackupPath, bool ignoreMetadataErrors)
         {
-            AssertNotDisposed();
-            srcPath = ValidatePath(srcPath, nameof(srcPath));
-            destPath = ValidatePath(destPath, nameof(destPath));
-            destBackupPath = ValidatePath(destBackupPath, nameof(destBackupPath), true);
+            this.AssertNotDisposed();
+            srcPath = this.ValidatePath(srcPath, nameof(srcPath));
+            destPath = this.ValidatePath(destPath, nameof(destPath));
+            destBackupPath = this.ValidatePath(destBackupPath, nameof(destBackupPath), true);
 
-            if (!FileExistsImpl(srcPath))
+            if (!this.FileExistsImpl(srcPath))
             {
                 throw NewFileNotFoundException(srcPath);
             }
 
-            if (!FileExistsImpl(destPath))
+            if (!this.FileExistsImpl(destPath))
             {
                 throw NewFileNotFoundException(srcPath);
             }
@@ -185,7 +186,7 @@ namespace Zio.FileSystems
                 throw new IOException($"The source and backup cannot have the same path `{srcPath}`");
             }
 
-            ReplaceFileImpl(srcPath, destPath, destBackupPath, ignoreMetadataErrors);
+            this.ReplaceFileImpl(srcPath, destPath, destBackupPath, ignoreMetadataErrors);
         }
 
         /// <summary>
@@ -202,8 +203,8 @@ namespace Zio.FileSystems
         /// <inheritdoc />
         public long GetFileLength(UPath path)
         {
-            AssertNotDisposed();
-            return GetFileLengthImpl(ValidatePath(path));
+            this.AssertNotDisposed();
+            return this.GetFileLengthImpl(this.ValidatePath(path));
         }
 
         /// <summary>
@@ -217,7 +218,7 @@ namespace Zio.FileSystems
         /// <inheritdoc />
         public bool FileExists(UPath path)
         {
-            AssertNotDisposed();
+            this.AssertNotDisposed();
 
             // Only case where a null path is allowed
             if (path.IsNull)
@@ -225,7 +226,7 @@ namespace Zio.FileSystems
                 return false;
             }
 
-            return FileExistsImpl(ValidatePath(path));
+            return this.FileExistsImpl(this.ValidatePath(path));
         }
 
         /// <summary>
@@ -242,8 +243,8 @@ namespace Zio.FileSystems
         /// <inheritdoc />
         public void MoveFile(UPath srcPath, UPath destPath)
         {
-            AssertNotDisposed();
-            MoveFileImpl(ValidatePath(srcPath, nameof(srcPath)), ValidatePath(destPath, nameof(destPath)));
+            this.AssertNotDisposed();
+            this.MoveFileImpl(this.ValidatePath(srcPath, nameof(srcPath)), this.ValidatePath(destPath, nameof(destPath)));
         }
 
         /// <summary>
@@ -258,8 +259,8 @@ namespace Zio.FileSystems
         /// <inheritdoc />
         public void DeleteFile(UPath path)
         {
-            AssertNotDisposed();
-            DeleteFileImpl(ValidatePath(path));
+            this.AssertNotDisposed();
+            this.DeleteFileImpl(this.ValidatePath(path));
         }
 
         /// <summary>
@@ -272,14 +273,14 @@ namespace Zio.FileSystems
         /// <inheritdoc />
         public Stream OpenFile(UPath path, FileMode mode, FileAccess access, FileShare share = FileShare.None)
         {
-            AssertNotDisposed();
-            return OpenFileImpl(ValidatePath(path), mode, access, share);
+            this.AssertNotDisposed();
+            return this.OpenFileImpl(this.ValidatePath(path), mode, access, share);
         }
 
         /// <inheritdoc />
         public Stream OpenRead(UPath path)
         {
-            return OpenFile(path, FileMode.Open, FileAccess.Read, FileShare.Read);
+            return this.OpenFile(path, FileMode.Open, FileAccess.Read, FileShare.Read);
         }
 
         /// <summary>
@@ -300,8 +301,8 @@ namespace Zio.FileSystems
         /// <inheritdoc />
         public FileAttributes GetAttributes(UPath path)
         {
-            AssertNotDisposed();
-            return GetAttributesImpl(ValidatePath(path));
+            this.AssertNotDisposed();
+            return this.GetAttributesImpl(this.ValidatePath(path));
         }
 
         /// <summary>
@@ -315,8 +316,8 @@ namespace Zio.FileSystems
         /// <inheritdoc />
         public void SetAttributes(UPath path, FileAttributes attributes)
         {
-            AssertNotDisposed();
-            SetAttributesImpl(ValidatePath(path), attributes);
+            this.AssertNotDisposed();
+            this.SetAttributesImpl(this.ValidatePath(path), attributes);
         }
 
         /// <summary>
@@ -330,8 +331,8 @@ namespace Zio.FileSystems
         /// <inheritdoc />
         public DateTime GetCreationTime(UPath path)
         {
-            AssertNotDisposed();
-            return GetCreationTimeImpl(ValidatePath(path));
+            this.AssertNotDisposed();
+            return this.GetCreationTimeImpl(this.ValidatePath(path));
         }
 
         /// <summary>
@@ -345,8 +346,8 @@ namespace Zio.FileSystems
         /// <inheritdoc />
         public void SetCreationTime(UPath path, DateTime time)
         {
-            AssertNotDisposed();
-            SetCreationTimeImpl(ValidatePath(path), time);
+            this.AssertNotDisposed();
+            this.SetCreationTimeImpl(this.ValidatePath(path), time);
         }
 
         /// <summary>
@@ -360,8 +361,8 @@ namespace Zio.FileSystems
         /// <inheritdoc />
         public DateTime GetLastAccessTime(UPath path)
         {
-            AssertNotDisposed();
-            return GetLastAccessTimeImpl(ValidatePath(path));
+            this.AssertNotDisposed();
+            return this.GetLastAccessTimeImpl(this.ValidatePath(path));
         }
 
         /// <summary>
@@ -375,8 +376,8 @@ namespace Zio.FileSystems
         /// <inheritdoc />
         public void SetLastAccessTime(UPath path, DateTime time)
         {
-            AssertNotDisposed();
-            SetLastAccessTimeImpl(ValidatePath(path), time);
+            this.AssertNotDisposed();
+            this.SetLastAccessTimeImpl(this.ValidatePath(path), time);
         }
 
         /// <summary>
@@ -390,8 +391,8 @@ namespace Zio.FileSystems
         /// <inheritdoc />
         public DateTime GetLastWriteTime(UPath path)
         {
-            AssertNotDisposed();
-            return GetLastWriteTimeImpl(ValidatePath(path));
+            this.AssertNotDisposed();
+            return this.GetLastWriteTimeImpl(this.ValidatePath(path));
         }
 
         /// <summary>
@@ -405,8 +406,8 @@ namespace Zio.FileSystems
         /// <inheritdoc />
         public void SetLastWriteTime(UPath path, DateTime time)
         {
-            AssertNotDisposed();
-            SetLastWriteTimeImpl(ValidatePath(path), time);
+            this.AssertNotDisposed();
+            this.SetLastWriteTimeImpl(this.ValidatePath(path), time);
         }
 
         /// <summary>
@@ -424,9 +425,9 @@ namespace Zio.FileSystems
         /// <inheritdoc />
         public IEnumerable<UPath> EnumeratePaths(UPath path, string searchPattern, SearchOption searchOption, SearchTarget searchTarget)
         {
-            AssertNotDisposed();
+            this.AssertNotDisposed();
             if (searchPattern == null) throw new ArgumentNullException(nameof(searchPattern));
-            return EnumeratePathsImpl(ValidatePath(path), searchPattern, searchOption, searchTarget);
+            return this.EnumeratePathsImpl(this.ValidatePath(path), searchPattern, searchOption, searchTarget);
         }
 
         /// <summary>
@@ -447,8 +448,8 @@ namespace Zio.FileSystems
         /// <inheritdoc />
         public bool CanWatch(UPath path)
         {
-            AssertNotDisposed();
-            return CanWatchImpl(ValidatePath(path));
+            this.AssertNotDisposed();
+            return this.CanWatchImpl(this.ValidatePath(path));
         }
 
         /// <summary>
@@ -465,16 +466,16 @@ namespace Zio.FileSystems
         /// <inheritdoc />
         public IFileSystemWatcher Watch(UPath path)
         {
-            AssertNotDisposed();
+            this.AssertNotDisposed();
 
-            var validatedPath = ValidatePath(path);
+            var validatedPath = this.ValidatePath(path);
 
-            if (!CanWatchImpl(validatedPath))
+            if (!this.CanWatchImpl(validatedPath))
             {
                 throw new NotSupportedException($"The file system or path `{validatedPath}` does not support watching");
             }
 
-            return WatchImpl(validatedPath);
+            return this.WatchImpl(validatedPath);
         }
 
         /// <summary>
@@ -493,8 +494,8 @@ namespace Zio.FileSystems
         /// <inheritdoc />
         public string ConvertPathToInternal(UPath path)
         {
-            AssertNotDisposed();
-            return ConvertPathToInternalImpl(ValidatePath(path));
+            this.AssertNotDisposed();
+            return this.ConvertPathToInternalImpl(this.ValidatePath(path));
         }
 
         /// <summary>
@@ -509,9 +510,9 @@ namespace Zio.FileSystems
         /// <inheritdoc />
         public UPath ConvertPathFromInternal(string systemPath)
         {
-            AssertNotDisposed();
+            this.AssertNotDisposed();
             if (systemPath == null) throw new ArgumentNullException(nameof(systemPath));
-            return ValidatePath(ConvertPathFromInternalImpl(systemPath));
+            return this.ValidatePath(this.ConvertPathFromInternalImpl(systemPath));
         }
         /// <summary>
         /// Implementation for <see cref="ConvertPathToInternal"/>, <paramref name="innerPath"/> is guaranteed to be not null and return path to be validated through <see cref="ValidatePath"/>.
@@ -552,7 +553,7 @@ namespace Zio.FileSystems
             }
             path.AssertAbsolute(name);
 
-            return ValidatePathImpl(path, name);
+            return this.ValidatePathImpl(path, name);
         }
 
         /// <summary>
@@ -565,18 +566,18 @@ namespace Zio.FileSystems
 
         private void AssertNotDisposed()
         {
-            if (IsDisposing || IsDisposed)
+            if (this.IsDisposing || this.IsDisposed)
             {
-                throw new ObjectDisposedException($"This instance `{GetType()}` is already disposed.");
+                throw new ObjectDisposedException($"This instance `{this.GetType()}` is already disposed.");
             }
         }
 
         private void DisposeInternal(bool disposing)
         {
-            AssertNotDisposed();
-            IsDisposing = true;
-            Dispose(disposing);
-            IsDisposed = true;
+            this.AssertNotDisposed();
+            this.IsDisposing = true;
+            this.Dispose(disposing);
+            this.IsDisposed = true;
         }
 
         public IReadOnlyFileSystem AsReadOnly()

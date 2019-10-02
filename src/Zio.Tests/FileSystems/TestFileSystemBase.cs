@@ -13,8 +13,8 @@ namespace Zio.Tests.FileSystems
 {
     public abstract class TestFileSystemBase : IDisposable
     {
-        private static readonly UPath[] Directories = new UPath[] { "a", "b", "C", "d" };
-        private static readonly UPath[] Files = new UPath[] { "b.txt", "c.txt1", "d.i", "f.i1", "A.txt", "a/a.txt", "b/b.i", "E" };
+        private static readonly UPath[] Directories = { "a", "b", "C", "d" };
+        private static readonly UPath[] Files = { "b.txt", "c.txt1", "d.i", "f.i1", "A.txt", "a/a.txt", "b/b.i", "E" };
         private static readonly object Lock = new object();
         private PhysicalDirectoryHelper _physicalDirectoryHelper;
         private readonly EnumeratePathsResult _referenceEnumeratePathsResult;
@@ -75,6 +75,7 @@ namespace Zio.Tests.FileSystems
             }
             catch (Exception)
             {
+                // ignored
             }
         }
         protected static void SafeDeleteFile(string path)
@@ -88,15 +89,13 @@ namespace Zio.Tests.FileSystems
             }
             catch (Exception)
             {
+                // ignored
             }
         }
 
         public virtual void Dispose()
         {
-            if (_physicalDirectoryHelper != null)
-            {
-                _physicalDirectoryHelper.Dispose();
-            }
+            this._physicalDirectoryHelper?.Dispose();
 
             Monitor.Exit(Lock);
         }
@@ -104,11 +103,9 @@ namespace Zio.Tests.FileSystems
 
         protected IFileSystem GetCommonPhysicalFileSystem()
         {
-            if (_physicalDirectoryHelper == null)
-            {
-                _physicalDirectoryHelper = new PhysicalDirectoryHelper(SystemPath);
-                CreateFolderStructure(_physicalDirectoryHelper.PhysicalFileSystem);
-            }
+            if (this._physicalDirectoryHelper != null) return this._physicalDirectoryHelper.PhysicalFileSystem;
+            this._physicalDirectoryHelper = new PhysicalDirectoryHelper(this.SystemPath);
+            CreateFolderStructure(this._physicalDirectoryHelper.PhysicalFileSystem);
             return _physicalDirectoryHelper.PhysicalFileSystem;
         }
 
@@ -301,7 +298,7 @@ namespace Zio.Tests.FileSystems
         }
 
         [SuppressMessage("ReSharper", "InconsistentNaming")]
-        class EnumeratePathsResult
+        sealed class EnumeratePathsResult
         {
             private readonly List<UPath> TopDirs;
             private readonly List<UPath> TopFiles;
@@ -370,14 +367,12 @@ namespace Zio.Tests.FileSystems
             }
         }
 
-        private void CreateFolderStructure(IFileSystem fs)
+        private static void CreateFolderStructure(IFileSystem fs)
         {
             void CreateFolderStructure(UPath root)
             {
-
-                foreach (var dir in Directories)
+                foreach (var pathDir in Directories.Select(dir => root / dir))
                 {
-                    var pathDir = root / dir;
                     fs.CreateDirectory(pathDir);
                 }
 

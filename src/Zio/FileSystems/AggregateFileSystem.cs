@@ -33,8 +33,8 @@ namespace Zio.FileSystems
         /// <param name="owned">True if <paramref name="fileSystem"/> and other filesystems should be disposed when this instance is disposed.</param>
         public AggregateFileSystem(IFileSystem fileSystem, bool owned = true) : base(fileSystem, owned)
         {
-            _fileSystems = new List<IFileSystem>();
-            _watchers = new List<Watcher>();
+            this._fileSystems = new List<IFileSystem>();
+            this._watchers = new List<Watcher>();
         }
 
         protected override void Dispose(bool disposing)
@@ -46,24 +46,24 @@ namespace Zio.FileSystems
                 return;
             }
 
-            lock (_fileSystems)
+            lock (this._fileSystems)
             {
-                if (Owned)
+                if (this.Owned)
                 {
-                    foreach (var fs in _fileSystems)
+                    foreach (var fs in this._fileSystems)
                     {
                         fs.Dispose();
                     }
                 }
 
-                _fileSystems.Clear();
+                this._fileSystems.Clear();
 
-                foreach (var watcher in _watchers)
+                foreach (var watcher in this._watchers)
                 {
                     watcher.Dispose();
                 }
 
-                _watchers.Clear();
+                this._watchers.Clear();
             }
         }
 
@@ -73,9 +73,9 @@ namespace Zio.FileSystems
         /// </summary>
         public List<IFileSystem> GetFileSystems()
         {
-            lock (_fileSystems)
+            lock (this._fileSystems)
             {
-                return new List<IFileSystem>(_fileSystems);
+                return new List<IFileSystem>(this._fileSystems);
             }
         }
 
@@ -84,13 +84,13 @@ namespace Zio.FileSystems
         /// </summary>
         public void ClearFileSystems()
         {
-            lock (_fileSystems)
+            lock (this._fileSystems)
             {
-                _fileSystems.Clear();
+                this._fileSystems.Clear();
 
-                foreach (var watcher in _watchers)
+                foreach (var watcher in this._watchers)
                 {
-                    watcher.Clear(NextFileSystem);
+                    watcher.Clear(this.NextFileSystem);
                 }
             }
         }
@@ -108,22 +108,22 @@ namespace Zio.FileSystems
         public void SetFileSystems(IEnumerable<IFileSystem> fileSystems)
         {
             if (fileSystems == null) throw new ArgumentNullException(nameof(fileSystems));
-            lock (_fileSystems)
+            lock (this._fileSystems)
             {
-                _fileSystems.Clear();
+                this._fileSystems.Clear();
 
-                foreach (var watcher in _watchers)
+                foreach (var watcher in this._watchers)
                 {
-                    watcher.Clear(NextFileSystem);
+                    watcher.Clear(this.NextFileSystem);
                 }
 
                 foreach (var fileSystem in fileSystems)
                 {
                     if (fileSystem == null) throw new ArgumentException("A null filesystem is invalid");
                     if (fileSystem == this) throw new ArgumentException("Cannot add this instance as an aggregate delegate of itself");
-                    _fileSystems.Add(fileSystem);
+                    this._fileSystems.Add(fileSystem);
 
-                    foreach (var watcher in _watchers)
+                    foreach (var watcher in this._watchers)
                     {
                         if (fileSystem.CanWatch(watcher.Path))
                         {
@@ -148,13 +148,13 @@ namespace Zio.FileSystems
             if (fs == null) throw new ArgumentNullException(nameof(fs));
             if (fs == this) throw new ArgumentException("Cannot add this instance as an aggregate delegate of itself");
 
-            lock (_fileSystems)
+            lock (this._fileSystems)
             {
-                if (!_fileSystems.Contains(fs))
+                if (!this._fileSystems.Contains(fs))
                 {
-                    _fileSystems.Add(fs);
+                    this._fileSystems.Add(fs);
 
-                    foreach (var watcher in _watchers)
+                    foreach (var watcher in this._watchers)
                     {
                         if (fs.CanWatch(watcher.Path))
                         {
@@ -179,13 +179,13 @@ namespace Zio.FileSystems
         public virtual void RemoveFileSystem(IFileSystem fs)
         {
             if (fs == null) throw new ArgumentNullException(nameof(fs));
-            lock (_fileSystems)
+            lock (this._fileSystems)
             {
-                if (_fileSystems.Contains(fs))
+                if (this._fileSystems.Contains(fs))
                 {
-                    _fileSystems.Remove(fs);
+                    this._fileSystems.Remove(fs);
 
-                    foreach (var watcher in _watchers)
+                    foreach (var watcher in this._watchers)
                     {
                         watcher.RemoveFrom(fs);
                     }
@@ -206,7 +206,7 @@ namespace Zio.FileSystems
         public List<FileSystemEntry> FindFileSystemEntries(UPath path)
         {
             path.AssertAbsolute();
-            var paths = FindPaths(path, SearchTarget.Both);
+            var paths = this.FindPaths(path, SearchTarget.Both);
             var result = new List<FileSystemEntry>(paths.Count);
             if (paths.Count == 0)
             {
@@ -239,7 +239,7 @@ namespace Zio.FileSystems
         /// <inheritdoc />
         protected override bool DirectoryExistsImpl(UPath path)
         {
-            var directory = TryGetDirectory(path);
+            var directory = this.TryGetDirectory(path);
             return directory.HasValue;
         }
 
@@ -250,14 +250,14 @@ namespace Zio.FileSystems
         /// <inheritdoc />
         protected override long GetFileLengthImpl(UPath path)
         {
-            var entry = GetFile(path);
+            var entry = this.GetFile(path);
             return entry.FileSystem.GetFileLength(path);
         }
 
         /// <inheritdoc />
         protected override bool FileExistsImpl(UPath path)
         {
-            var entry = TryGetFile(path);
+            var entry = this.TryGetFile(path);
             return entry.HasValue;
         }
 
@@ -274,7 +274,7 @@ namespace Zio.FileSystems
                 throw new IOException(FileSystemIsReadOnly);
             }
 
-            var entry = GetFile(path);
+            var entry = this.GetFile(path);
             return entry.FileSystem.OpenFile(path, mode, access, share);
         }
 
@@ -285,28 +285,28 @@ namespace Zio.FileSystems
         /// <inheritdoc />
         protected override FileAttributes GetAttributesImpl(UPath path)
         {
-            var entry = GetPath(path);
+            var entry = this.GetPath(path);
             return entry.FileSystem.GetAttributes(path) | FileAttributes.ReadOnly;
         }
 
         /// <inheritdoc />
         protected override DateTime GetCreationTimeImpl(UPath path)
         {
-            var entry = TryGetPath(path);
+            var entry = this.TryGetPath(path);
             return entry.HasValue ? entry.Value.FileSystem.GetCreationTime(path) : DefaultFileTime;
         }
 
         /// <inheritdoc />
         protected override DateTime GetLastAccessTimeImpl(UPath path)
         {
-            var entry = TryGetPath(path);
+            var entry = this.TryGetPath(path);
             return entry.HasValue ? entry.Value.FileSystem.GetLastWriteTime(path) : DefaultFileTime;
         }
 
         /// <inheritdoc />
         protected override DateTime GetLastWriteTimeImpl(UPath path)
         {
-            var entry = TryGetPath(path);
+            var entry = this.TryGetPath(path);
             return entry.HasValue ? entry.Value.FileSystem.GetLastWriteTime(path) : DefaultFileTime;
         }
 
@@ -326,22 +326,22 @@ namespace Zio.FileSystems
             var sortedDirectories = new SortedSet<UPath>(UPath.DefaultComparerIgnoreCase);
             var fileSystems = new List<IFileSystem>();
 
-            if (NextFileSystem != null)
+            if (this.NextFileSystem != null)
             {
-                fileSystems.Add(NextFileSystem);
+                fileSystems.Add(this.NextFileSystem);
             }
 
             // Query all filesystems just once
-            lock (_fileSystems)
+            lock (this._fileSystems)
             {
-                fileSystems.AddRange(_fileSystems);
+                fileSystems.AddRange(this._fileSystems);
             }
 
             while (directoryToVisit.Count > 0)
             {
                 var pathToVisit = directoryToVisit[0];
                 directoryToVisit.RemoveAt(0);
-                int dirIndex = 0;
+                var dirIndex = 0;
                 entries.Clear();
                 sortedDirectories.Clear();
 
@@ -413,16 +413,16 @@ namespace Zio.FileSystems
         /// <inheritdoc />
         protected override IFileSystemWatcher WatchImpl(UPath path)
         {
-            lock (_fileSystems)
+            lock (this._fileSystems)
             {
                 var watcher = new Watcher(this, path);
 
-                if (NextFileSystem != null && NextFileSystem.CanWatch(path))
+                if (this.NextFileSystem?.CanWatch(path) == true)
                 {
-                    watcher.Add(NextFileSystem.Watch(path));
+                    watcher.Add(this.NextFileSystem.Watch(path));
                 }
 
-                foreach (var fs in _fileSystems)
+                foreach (var fs in this._fileSystems)
                 {
                     if (fs.CanWatch(path))
                     {
@@ -430,7 +430,7 @@ namespace Zio.FileSystems
                     }
                 }
 
-                _watchers.Add(watcher);
+                this._watchers.Add(watcher);
                 return watcher;
             }
         }
@@ -442,18 +442,18 @@ namespace Zio.FileSystems
             public Watcher(AggregateFileSystem fileSystem, UPath path)
                 : base(fileSystem, path)
             {
-                _fileSystem = fileSystem;
+                this._fileSystem = fileSystem;
             }
 
             protected override void Dispose(bool disposing)
             {
                 base.Dispose(disposing);
 
-                if (disposing && !_fileSystem.IsDisposing)
+                if (disposing && !this._fileSystem.IsDisposing)
                 {
-                    lock (_fileSystem._fileSystems)
+                    lock (this._fileSystem._fileSystems)
                     {
-                        _fileSystem._watchers.Remove(this);
+                        this._fileSystem._watchers.Remove(this);
                     }
                 }
             }
@@ -467,7 +467,7 @@ namespace Zio.FileSystems
 
         private FileSystemPath GetFile(UPath path)
         {
-            var entry = TryGetFile(path);
+            var entry = this.TryGetFile(path);
             if (!entry.HasValue)
             {
                 throw NewFileNotFoundException(path);
@@ -477,19 +477,19 @@ namespace Zio.FileSystems
 
         private FileSystemPath? TryGetFile(UPath path)
         {
-            var entries = FindPaths(path, SearchTarget.File);
+            var entries = this.FindPaths(path, SearchTarget.File);
             return entries.Count > 0 ? (FileSystemPath?)entries[0] : null;
         }
 
         private FileSystemPath? TryGetDirectory(UPath path)
         {
-            var entries = FindPaths(path, SearchTarget.Directory);
+            var entries = this.FindPaths(path, SearchTarget.Directory);
             return entries.Count > 0 ? (FileSystemPath?)entries[0] : null;
         }
 
         private FileSystemPath GetPath(UPath path)
         {
-            var entry = TryGetPath(path);
+            var entry = this.TryGetPath(path);
             if (!entry.HasValue)
             {
                 throw NewFileNotFoundException(path);
@@ -499,7 +499,7 @@ namespace Zio.FileSystems
 
         private FileSystemPath? TryGetPath(UPath path)
         {
-            var entries = FindPaths(path, SearchTarget.Both);
+            var entries = this.FindPaths(path, SearchTarget.Both);
             return entries.Count > 0 ? (FileSystemPath?)entries[0] : null;
         }
 
@@ -507,21 +507,21 @@ namespace Zio.FileSystems
         {
             var paths = new List<FileSystemPath>();
 
-            bool queryDirectory = searchTarget == SearchTarget.Both || searchTarget == SearchTarget.Directory;
-            bool queryFile = searchTarget == SearchTarget.Both || searchTarget == SearchTarget.File;
+            var queryDirectory = searchTarget == SearchTarget.Both || searchTarget == SearchTarget.Directory;
+            var queryFile = searchTarget == SearchTarget.Both || searchTarget == SearchTarget.File;
 
-            lock (_fileSystems)
+            lock (this._fileSystems)
             {
-                for (var i = _fileSystems.Count - 1; i >= -1; i--)
+                for (var i = this._fileSystems.Count - 1; i >= -1; i--)
                 {
-                    var fileSystem = i < 0 ? NextFileSystem : _fileSystems[i];
+                    var fileSystem = i < 0 ? this.NextFileSystem : this._fileSystems[i];
 
                     if (fileSystem == null)
                     {
                         break;
                     }
 
-                    bool isFile = false;
+                    var isFile = false;
                     if ((queryDirectory && fileSystem.DirectoryExists(path)) || (queryFile && (isFile = fileSystem.FileExists(path))))
                     {
                         paths.Add(new FileSystemPath(fileSystem, path, isFile));
@@ -536,9 +536,9 @@ namespace Zio.FileSystems
         {
             public FileSystemPath(IFileSystem fileSystem, UPath path, bool isFile)
             {
-                FileSystem = fileSystem;
-                Path = path;
-                IsFile = isFile;
+                this.FileSystem = fileSystem;
+                this.Path = path;
+                this.IsFile = isFile;
             }
 
             public readonly IFileSystem FileSystem;

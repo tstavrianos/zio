@@ -29,7 +29,7 @@ namespace Zio
             path.AssertNotNull();
             var name = path.GetName();
             // if _execMatch is null and _regexMatch is null, we have a * match
-            return _exactMatch != null ? _exactMatch == name : _regexMatch == null || _regexMatch.IsMatch(name);
+            return this._exactMatch != null ? this._exactMatch == name : this._regexMatch?.IsMatch(name) != false;
         }
 
         /// <summary>
@@ -41,7 +41,7 @@ namespace Zio
         {
             if (name == null) throw new ArgumentNullException(nameof(name));
             // if _execMatch is null and _regexMatch is null, we have a * match
-            return _exactMatch != null ? _exactMatch == name : _regexMatch == null || _regexMatch.IsMatch(name);
+            return this._exactMatch != null ? this._exactMatch == name : this._regexMatch?.IsMatch(name) != false;
         }
 
         /// <summary>
@@ -70,8 +70,8 @@ namespace Zio
             path.AssertAbsolute();
             if (searchPattern == null) throw new ArgumentNullException(nameof(searchPattern));
 
-            _exactMatch = null;
-            _regexMatch = null;
+            this._exactMatch = null;
+            this._regexMatch = null;
 
             // Optimized path, most common case
             if (searchPattern == "*")
@@ -93,7 +93,7 @@ namespace Zio
                 var directory = pathPattern.GetDirectory();
                 if (!directory.IsNull && !directory.IsEmpty)
                 {
-                    path = path / directory;
+                    path /= directory;
                 }
                 searchPattern = pathPattern.GetName();
 
@@ -105,10 +105,10 @@ namespace Zio
             }
 
             var startIndex = 0;
-            int nextIndex;
             StringBuilder builder = null;
             try
             {
+                int nextIndex;
                 while ((nextIndex = searchPattern.IndexOfAny(SpecialChars, startIndex)) >= 0)
                 {
                     if (builder == null)
@@ -132,7 +132,7 @@ namespace Zio
                 }
                 if (builder == null)
                 {
-                    _exactMatch = searchPattern;
+                    this._exactMatch = searchPattern;
                 }
                 else
                 {
@@ -146,7 +146,7 @@ namespace Zio
                     builder.Append("$");
 
                     var regexPattern = builder.ToString();
-                    _regexMatch = new Regex(regexPattern);
+                    this._regexMatch = new Regex(regexPattern);
                 }
             }
             finally

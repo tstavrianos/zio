@@ -9,7 +9,6 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using Xunit;
-using Zio;
 using Zio.FileSystems;
 
 namespace Zio.Tests.FileSystems

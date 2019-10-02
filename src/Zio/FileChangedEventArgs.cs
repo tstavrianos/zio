@@ -36,10 +36,10 @@ namespace Zio
             fullPath.AssertNotNull(nameof(fullPath));
             fullPath.AssertAbsolute(nameof(fullPath));
 
-            FileSystem = fileSystem;
-            ChangeType = changeType;
-            FullPath = fullPath;
-            Name = fullPath.GetName();
+            this.FileSystem = fileSystem;
+            this.ChangeType = changeType;
+            this.FullPath = fullPath;
+            this.Name = fullPath.GetName();
         }
     }
 }

@@ -20,7 +20,7 @@ namespace Zio
                 throw new ArgumentNullException(nameof(exception));
             }
 
-            Exception = exception;
+            this.Exception = exception;
         }
     }
 }

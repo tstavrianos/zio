@@ -120,8 +120,8 @@ namespace Zio
             }
 
             var paths = new List<string>();
-            int previousIndex = path.IsAbsolute ? 1 : 0;
-            int nextIndex = 0;
+            var previousIndex = path.IsAbsolute ? 1 : 0;
+            var nextIndex = 0;
             while ((nextIndex = fullname.IndexOf(UPath.DirectorySeparator, previousIndex)) >= 0)
             {
                 if (nextIndex != 0)

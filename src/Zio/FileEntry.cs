@@ -30,7 +30,7 @@ namespace Zio
         ///     The specified path is invalid, such as being on an unmapped
         ///     drive.
         /// </exception>
-        public DirectoryEntry Directory => Parent;
+        public DirectoryEntry Directory => this.Parent;
 
         /// <summary>Gets or sets a value that determines if the current file is read only.</summary>
         /// <returns>true if the current file is read only; otherwise, false.</returns>
@@ -47,7 +47,7 @@ namespace Zio
         ///     The user does not have write permission, but attempted to set this
         ///     property to false.
         /// </exception>
-        public bool IsReadOnly => (FileSystem.GetAttributes(Path) & FileAttributes.ReadOnly) != 0;
+        public bool IsReadOnly => (this.FileSystem.GetAttributes(this.Path) & FileAttributes.ReadOnly) != 0;
 
         /// <summary>Gets the size, in bytes, of the current file.</summary>
         /// <returns>The size of the current file in bytes.</returns>
@@ -58,7 +58,7 @@ namespace Zio
         ///     The file does not exist.-or- The Length property is called for a
         ///     directory.
         /// </exception>
-        public long Length => FileSystem.GetFileLength(Path);
+        public long Length => this.FileSystem.GetFileLength(this.Path);
 
         /// <summary>Copies an existing file to a new file, allowing the overwriting of an existing file.</summary>
         /// <returns>
@@ -96,8 +96,8 @@ namespace Zio
         /// </exception>
         public FileEntry CopyTo(UPath destFileName, bool overwrite)
         {
-            FileSystem.CopyFile(Path, destFileName, overwrite);
-            return new FileEntry(FileSystem, destFileName);
+            this.FileSystem.CopyFile(this.Path, destFileName, overwrite);
+            return new FileEntry(this.FileSystem, destFileName);
         }
 
         /// <summary>Copies an existing file to a new file on another <see cref="IFileSystem"/>, allowing the overwriting of an existing file.</summary>
@@ -134,7 +134,7 @@ namespace Zio
         public FileEntry CopyTo(FileEntry destFile, bool overwrite)
         {
             if (destFile == null) throw new ArgumentNullException(nameof(destFile));
-            FileSystem.CopyFileCross(destFile.FileSystem, Path, destFile.Path, overwrite);
+            this.FileSystem.CopyFileCross(destFile.FileSystem, this.Path, destFile.Path, overwrite);
             return destFile;
         }
 
@@ -142,7 +142,7 @@ namespace Zio
         /// <returns>A new file.</returns>
         public Stream Create()
         {
-            return FileSystem.CreateFile(Path);
+            return this.FileSystem.CreateFile(this.Path);
         }
 
         /// <summary>Moves a specified file to a new location, providing the option to specify a new file name.</summary>
@@ -176,7 +176,7 @@ namespace Zio
         /// </exception>
         public void MoveTo(UPath destFileName)
         {
-            FileSystem.MoveFile(Path, destFileName);
+            this.FileSystem.MoveFile(this.Path, destFileName);
         }
 
         /// <summary>Opens a file in the specified mode with read, write, or read/write access and the specified sharing option.</summary>
@@ -205,7 +205,7 @@ namespace Zio
         /// <exception cref="T:System.IO.IOException">The file is already open. </exception>
         public Stream Open(FileMode mode, FileAccess access, FileShare share = FileShare.None)
         {
-            return FileSystem.OpenFile(Path, mode, access, share);
+            return this.FileSystem.OpenFile(this.Path, mode, access, share);
         }
 
         /// <summary>
@@ -216,7 +216,7 @@ namespace Zio
         /// <param name="ignoreMetadataErrors"><c>true</c> to ignore merge errors (such as attributes and access control lists (ACLs)) from the replaced file to the replacement file; otherwise, <c>false</c>.</param>
         public void ReplaceTo(UPath destPath, UPath destBackupPath, bool ignoreMetadataErrors)
         {
-            FileSystem.ReplaceFile(Path, destPath, destBackupPath, ignoreMetadataErrors);
+            this.FileSystem.ReplaceFile(this.Path, destPath, destBackupPath, ignoreMetadataErrors);
         }
 
         /// <summary>
@@ -229,7 +229,7 @@ namespace Zio
         /// </remarks>
         public string ReadAllText()
         {
-            return FileSystem.ReadAllText(Path);
+            return this.FileSystem.ReadAllText(this.Path);
         }
 
         /// <summary>
@@ -239,7 +239,7 @@ namespace Zio
         /// <returns>A string containing all lines of the file.</returns>
         public string ReadAllText(Encoding encoding)
         {
-            return FileSystem.ReadAllText(Path, encoding);
+            return this.FileSystem.ReadAllText(this.Path, encoding);
         }
 
         /// <summary>
@@ -256,7 +256,7 @@ namespace Zio
         /// </remarks>
         public void WriteAllText(string content)
         {
-            FileSystem.WriteAllText(Path, content);
+            this.FileSystem.WriteAllText(this.Path, content);
         }
 
         /// <summary>
@@ -273,7 +273,7 @@ namespace Zio
         /// </remarks>
         public void WriteAllText(string content, Encoding encoding)
         {
-            FileSystem.WriteAllText(Path, content, encoding);
+            this.FileSystem.WriteAllText(this.Path, content, encoding);
         }
 
         /// <summary>
@@ -285,12 +285,12 @@ namespace Zio
         /// <remarks>
         ///     Given a string and a file path, this method opens the specified file, appends the string to the end of the file,
         ///     and then closes the file. The file handle is guaranteed to be closed by this method, even if exceptions are raised.
-        ///     The method creates the file if it doesn’t exist, but it doesn't create new directories. Therefore, the value of the
+        ///     The method creates the file if it doesnâ€™t exist, but it doesn't create new directories. Therefore, the value of the
         ///     path parameter must contain existing directories.
         /// </remarks>
         public void AppendAllText(string content)
         {
-            FileSystem.AppendAllText(Path, content);
+            this.FileSystem.AppendAllText(this.Path, content);
         }
 
         /// <summary>
@@ -302,12 +302,12 @@ namespace Zio
         /// <remarks>
         ///     Given a string and a file path, this method opens the specified file, appends the string to the end of the file,
         ///     and then closes the file. The file handle is guaranteed to be closed by this method, even if exceptions are raised.
-        ///     The method creates the file if it doesn’t exist, but it doesn't create new directories. Therefore, the value of the
+        ///     The method creates the file if it doesnâ€™t exist, but it doesn't create new directories. Therefore, the value of the
         ///     path parameter must contain existing directories.
         /// </remarks>
         public void AppendAllText(string content, Encoding encoding)
         {
-            FileSystem.AppendAllText(Path, content, encoding);
+            this.FileSystem.AppendAllText(this.Path, content, encoding);
         }
 
         /// <summary>
@@ -316,7 +316,7 @@ namespace Zio
         /// <returns>An array of strings containing all lines of the file.</returns>
         public string[] ReadAllLines()
         {
-            return FileSystem.ReadAllLines(Path);
+            return this.FileSystem.ReadAllLines(this.Path);
         }
 
         /// <summary>
@@ -330,7 +330,7 @@ namespace Zio
         /// <returns>An array of strings containing all lines of the file.</returns>
         public string[] ReadAllLines(Encoding encoding)
         {
-            return FileSystem.ReadAllLines(Path, encoding);
+            return this.FileSystem.ReadAllLines(this.Path, encoding);
         }
 
         /// <summary>
@@ -339,7 +339,7 @@ namespace Zio
         /// <returns>A byte array containing the contents of the file.</returns>
         public byte[] ReadAllBytes()
         {
-            return FileSystem.ReadAllBytes(Path);
+            return this.FileSystem.ReadAllBytes(this.Path);
         }
 
         /// <summary>
@@ -354,16 +354,16 @@ namespace Zio
         /// </remarks>
         public void WriteAllBytes(byte[] content)
         {
-            FileSystem.WriteAllBytes(Path, content);
+            this.FileSystem.WriteAllBytes(this.Path, content);
         }
 
         /// <inheritdoc />
-        public override bool Exists => FileSystem.FileExists(Path);
+        public override bool Exists => this.FileSystem.FileExists(this.Path);
 
         /// <inheritdoc />
         public override void Delete()
         {
-            FileSystem.DeleteFile(Path);
+            this.FileSystem.DeleteFile(this.Path);
         }
     }
 }

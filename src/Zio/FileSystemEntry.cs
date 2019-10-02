@@ -20,9 +20,9 @@ namespace Zio
         /// <exception cref="System.ArgumentNullException">fileSystem</exception>
         protected FileSystemEntry(IFileSystem fileSystem, UPath path)
         {
-            FileSystem = fileSystem ?? throw new ArgumentNullException(nameof(fileSystem));
+            this.FileSystem = fileSystem ?? throw new ArgumentNullException(nameof(fileSystem));
             path.AssertAbsolute();
-            Path = path;
+            this.Path = path;
         }
 
         /// <summary>
@@ -38,31 +38,31 @@ namespace Zio
         /// <summary>
         /// Gets the full path of the directory or file.
         /// </summary>
-        public string FullName => Path.FullName;
+        public string FullName => this.Path.FullName;
 
         /// <summary>
         /// Gets the name of the file or directory (with its extension).
         /// </summary>
-        public string Name => Path.GetName();
+        public string Name => this.Path.GetName();
 
         /// <summary>
         /// Gets the name of the file or directory without its extension.
         /// </summary>
-        public string NameWithoutExtension => Path.GetNameWithoutExtension();
+        public string NameWithoutExtension => this.Path.GetNameWithoutExtension();
 
         /// <summary>
         /// Gets the extension with a leading dot.
         /// </summary>
-        public string ExtensionWithDot => Path.GetExtensionWithDot();
+        public string ExtensionWithDot => this.Path.GetExtensionWithDot();
 
         /// <summary>
         /// Gets or sets the attributes for the current file or directory
         /// </summary>
         public FileAttributes Attributes
         {
-            get => FileSystem.GetAttributes(Path);
+            get => this.FileSystem.GetAttributes(this.Path);
 
-            set => FileSystem.SetAttributes(Path, value);
+            set => this.FileSystem.SetAttributes(this.Path, value);
         }
 
         /// <summary>
@@ -76,8 +76,8 @@ namespace Zio
         /// </summary>
         public DateTime CreationTime
         {
-            get => FileSystem.GetCreationTime(Path);
-            set => FileSystem.SetCreationTime(Path, value);
+            get => this.FileSystem.GetCreationTime(this.Path);
+            set => this.FileSystem.SetCreationTime(this.Path, value);
         }
 
         /// <summary>
@@ -85,8 +85,8 @@ namespace Zio
         /// </summary>
         public DateTime LastAccessTime
         {
-            get => FileSystem.GetLastAccessTime(Path);
-            set => FileSystem.SetLastAccessTime(Path, value);
+            get => this.FileSystem.GetLastAccessTime(this.Path);
+            set => this.FileSystem.SetLastAccessTime(this.Path, value);
         }
 
         /// <summary>
@@ -94,8 +94,8 @@ namespace Zio
         /// </summary>
         public DateTime LastWriteTime
         {
-            get => FileSystem.GetLastWriteTime(Path);
-            set => FileSystem.SetLastWriteTime(Path, value);
+            get => this.FileSystem.GetLastWriteTime(this.Path);
+            set => this.FileSystem.SetLastWriteTime(this.Path, value);
         }
 
         /// <summary>Gets an instance of the parent directory.</summary>
@@ -104,7 +104,7 @@ namespace Zio
         ///     The specified path is invalid, such as being on an unmapped
         ///     drive.
         /// </exception>
-        public DirectoryEntry Parent => Path == UPath.Root ? null : new DirectoryEntry(FileSystem, Path / "..");
+        public DirectoryEntry Parent => this.Path == UPath.Root ? null : new DirectoryEntry(this.FileSystem, this.Path / "..");
 
         /// <summary>
         /// Deletes a file or directory.
@@ -117,7 +117,7 @@ namespace Zio
         /// <returns>The <see cref="FullName"/> of this instance.</returns>
         public override string ToString()
         {
-            return Path.FullName;
+            return this.Path.FullName;
         }
 
         /// <inheritdoc />
@@ -125,7 +125,7 @@ namespace Zio
         {
             if (ReferenceEquals(null, other)) return false;
             if (ReferenceEquals(this, other)) return true;
-            return Path.Equals(other.Path) && FileSystem.Equals(other.FileSystem);
+            return this.Path.Equals(other.Path) && this.FileSystem.Equals(other.FileSystem);
         }
 
         /// <inheritdoc />
@@ -134,7 +134,7 @@ namespace Zio
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
             if (obj.GetType() != this.GetType()) return false;
-            return Equals((FileSystemEntry) obj);
+            return this.Equals((FileSystemEntry) obj);
         }
 
         /// <inheritdoc />
@@ -142,7 +142,7 @@ namespace Zio
         {
             unchecked
             {
-                return (Path.GetHashCode() * 397) ^ FileSystem.GetHashCode();
+                return (this.Path.GetHashCode() * 397) ^ this.FileSystem.GetHashCode();
             }
         }
 

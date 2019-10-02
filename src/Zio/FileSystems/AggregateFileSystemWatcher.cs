@@ -18,12 +18,12 @@ namespace Zio.FileSystems
         public AggregateFileSystemWatcher(IFileSystem fileSystem, UPath path)
             : base(fileSystem, path)
         {
-            _children = new List<IFileSystemWatcher>();
-            _internalBufferSize = 0;
-            _notifyFilter = NotifyFilters.Default;
-            _enableRaisingEvents = false;
-            _includeSubdirectories = false;
-            _filter = "*.*";
+            this._children = new List<IFileSystemWatcher>();
+            this._internalBufferSize = 0;
+            this._notifyFilter = NotifyFilters.Default;
+            this._enableRaisingEvents = false;
+            this._includeSubdirectories = false;
+            this._filter = "*.*";
         }
 
         /// <summary>
@@ -37,21 +37,21 @@ namespace Zio.FileSystems
                 throw new ArgumentNullException(nameof(watcher));
             }
 
-            lock (_children)
+            lock (this._children)
             {
-                if (_children.Contains(watcher))
+                if (this._children.Contains(watcher))
                 {
                     throw new ArgumentException("The filesystem watcher is already added", nameof(watcher));
                 }
 
-                watcher.InternalBufferSize = InternalBufferSize;
-                watcher.NotifyFilter = NotifyFilter;
-                watcher.EnableRaisingEvents = EnableRaisingEvents;
-                watcher.IncludeSubdirectories = IncludeSubdirectories;
-                watcher.Filter = Filter;
+                watcher.InternalBufferSize = this.InternalBufferSize;
+                watcher.NotifyFilter = this.NotifyFilter;
+                watcher.EnableRaisingEvents = this.EnableRaisingEvents;
+                watcher.IncludeSubdirectories = this.IncludeSubdirectories;
+                watcher.Filter = this.Filter;
 
-                RegisterEvents(watcher);
-                _children.Add(watcher);
+                this.RegisterEvents(watcher);
+                this._children.Add(watcher);
             }
         }
 
@@ -66,18 +66,18 @@ namespace Zio.FileSystems
                 throw new ArgumentNullException(nameof(fileSystem));
             }
 
-            lock (_children)
+            lock (this._children)
             {
-                for (var i = _children.Count - 1; i >= 0; i--)
+                for (var i = this._children.Count - 1; i >= 0; i--)
                 {
-                    var watcher = _children[i];
+                    var watcher = this._children[i];
                     if (watcher.FileSystem != fileSystem)
                     {
                         continue;
                     }
-                    
-                    UnregisterEvents(watcher);
-                    _children.RemoveAt(i);
+
+                    this.UnregisterEvents(watcher);
+                    this._children.RemoveAt(i);
                     watcher.Dispose();
                 }
             }
@@ -89,18 +89,18 @@ namespace Zio.FileSystems
         /// <param name="excludeFileSystem">Exclude this filesystem from removal.</param>
         public void Clear(IFileSystem excludeFileSystem = null)
         {
-            lock (_children)
+            lock (this._children)
             {
-                for (var i = _children.Count - 1; i >= 0; i--)
+                for (var i = this._children.Count - 1; i >= 0; i--)
                 {
-                    var watcher = _children[i];
+                    var watcher = this._children[i];
                     if (watcher.FileSystem == excludeFileSystem)
                     {
                         continue;
                     }
 
-                    UnregisterEvents(watcher);
-                    _children.RemoveAt(i);
+                    this.UnregisterEvents(watcher);
+                    this._children.RemoveAt(i);
                     watcher.Dispose();
                 }
             }
@@ -110,122 +110,122 @@ namespace Zio.FileSystems
         {
             if (disposing)
             {
-                Clear();
+                this.Clear();
             }
         }
 
         /// <inheritdoc />
         public override int InternalBufferSize
         {
-            get => _internalBufferSize;
+            get => this._internalBufferSize;
             set
             {
-                if (value == _internalBufferSize)
+                if (value == this._internalBufferSize)
                 {
                     return;
                 }
 
-                lock (_children)
+                lock (this._children)
                 {
-                    foreach (var watcher in _children)
+                    foreach (var watcher in this._children)
                     {
                         watcher.InternalBufferSize = value;
                     }
                 }
 
-                _internalBufferSize = value;
+                this._internalBufferSize = value;
             }
         }
 
         /// <inheritdoc />
         public override NotifyFilters NotifyFilter
         {
-            get => _notifyFilter;
+            get => this._notifyFilter;
             set
             {
-                if (value == _notifyFilter)
+                if (value == this._notifyFilter)
                 {
                     return;
                 }
 
-                lock (_children)
+                lock (this._children)
                 {
-                    foreach (var watcher in _children)
+                    foreach (var watcher in this._children)
                     {
                         watcher.NotifyFilter = value;
                     }
                 }
 
-                _notifyFilter = value;
+                this._notifyFilter = value;
             }
         }
 
         /// <inheritdoc />
         public override bool EnableRaisingEvents
         {
-            get => _enableRaisingEvents;
+            get => this._enableRaisingEvents;
             set
             {
-                if (value == _enableRaisingEvents)
+                if (value == this._enableRaisingEvents)
                 {
                     return;
                 }
 
-                lock (_children)
+                lock (this._children)
                 {
-                    foreach (var watcher in _children)
+                    foreach (var watcher in this._children)
                     {
                         watcher.EnableRaisingEvents = value;
                     }
                 }
 
-                _enableRaisingEvents = value;
+                this._enableRaisingEvents = value;
             }
         }
 
         /// <inheritdoc />
         public override bool IncludeSubdirectories
         {
-            get => _includeSubdirectories;
+            get => this._includeSubdirectories;
             set
             {
-                if (value == _includeSubdirectories)
+                if (value == this._includeSubdirectories)
                 {
                     return;
                 }
 
-                lock (_children)
+                lock (this._children)
                 {
-                    foreach (var watcher in _children)
+                    foreach (var watcher in this._children)
                     {
                         watcher.IncludeSubdirectories = value;
                     }
                 }
 
-                _includeSubdirectories = value;
+                this._includeSubdirectories = value;
             }
         }
 
         /// <inheritdoc />
         public override string Filter
         {
-            get => _filter;
+            get => this._filter;
             set
             {
-                if (value == _filter)
+                if (value == this._filter)
                 {
                     return;
                 }
 
-                lock (_children)
+                lock (this._children)
                 {
-                    foreach (var watcher in _children)
+                    foreach (var watcher in this._children)
                     {
                         watcher.Filter = value;
                     }
                 }
 
-                _filter = value;
+                this._filter = value;
             }
         }
     }

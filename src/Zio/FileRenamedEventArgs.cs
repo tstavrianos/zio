@@ -23,8 +23,8 @@ namespace Zio
             fullPath.AssertNotNull(nameof(oldFullPath));
             fullPath.AssertAbsolute(nameof(oldFullPath));
 
-            OldFullPath = oldFullPath;
-            OldName = oldFullPath.GetName();
+            this.OldFullPath = oldFullPath;
+            this.OldName = oldFullPath.GetName();
         }
     }
 }

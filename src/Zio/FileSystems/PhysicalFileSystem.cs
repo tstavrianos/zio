@@ -32,13 +32,13 @@ namespace Zio.FileSystems
                 throw new UnauthorizedAccessException($"Cannot create a directory in the path `{path}`");
             }
 
-            Directory.CreateDirectory(ConvertPathToInternal(path));
+            Directory.CreateDirectory(this.ConvertPathToInternal(path));
         }
 
         /// <inheritdoc />
         protected override bool DirectoryExistsImpl(UPath path)
         {
-            return IsWithinSpecialDirectory(path) ? SpecialDirectoryExists(path) : Directory.Exists(ConvertPathToInternal(path));
+            return IsWithinSpecialDirectory(path) ? SpecialDirectoryExists(path) : Directory.Exists(this.ConvertPathToInternal(path));
         }
 
         /// <inheritdoc />
@@ -66,8 +66,8 @@ namespace Zio.FileSystems
                 }
             }
 
-            var systemSrcPath = ConvertPathToInternal(srcPath);
-            var systemDestPath = ConvertPathToInternal(destPath);
+            var systemSrcPath = this.ConvertPathToInternal(srcPath);
+            var systemDestPath = this.ConvertPathToInternal(destPath);
 
             // If the souce path is a file
             var fileInfo = new FileInfo(systemSrcPath);
@@ -91,7 +91,7 @@ namespace Zio.FileSystems
                 throw new UnauthorizedAccessException($"Cannot delete directory `{path}`");
             }
 
-            Directory.Delete(ConvertPathToInternal(path), isRecursive);
+            Directory.Delete(this.ConvertPathToInternal(path), isRecursive);
         }
 
         // ----------------------------------------------
@@ -110,7 +110,7 @@ namespace Zio.FileSystems
                 throw new UnauthorizedAccessException($"The access to `{destPath}` is denied");
             }
 
-            File.Copy(ConvertPathToInternal(srcPath), ConvertPathToInternal(destPath), overwrite);
+            File.Copy(this.ConvertPathToInternal(srcPath), this.ConvertPathToInternal(destPath), overwrite);
         }
 
         /// <inheritdoc />
@@ -131,10 +131,11 @@ namespace Zio.FileSystems
 
             if (!destBackupPath.IsNull)
             {
-                CopyFileImpl(destPath, destBackupPath, true);
+                this.CopyFileImpl(destPath, destBackupPath, true);
             }
-            CopyFileImpl(srcPath, destPath, true);
-            DeleteFileImpl(srcPath);
+
+            this.CopyFileImpl(srcPath, destPath, true);
+            this.DeleteFileImpl(srcPath);
 
             // TODO: Add atomic version using File.Replace coming with .NET Standard 2.0
         }
@@ -146,13 +147,13 @@ namespace Zio.FileSystems
             {
                 throw new UnauthorizedAccessException($"The access to `{path}` is denied");
             }
-            return new FileInfo(ConvertPathToInternal(path)).Length;
+            return new FileInfo(this.ConvertPathToInternal(path)).Length;
         }
 
         /// <inheritdoc />
         protected override bool FileExistsImpl(UPath path)
         {
-            return !IsWithinSpecialDirectory(path) && File.Exists(ConvertPathToInternal(path));
+            return !IsWithinSpecialDirectory(path) && File.Exists(this.ConvertPathToInternal(path));
         }
 
         /// <inheritdoc />
@@ -166,7 +167,7 @@ namespace Zio.FileSystems
             {
                 throw new UnauthorizedAccessException($"The access to `{destPath}` is denied");
             }
-            File.Move(ConvertPathToInternal(srcPath), ConvertPathToInternal(destPath));
+            File.Move(this.ConvertPathToInternal(srcPath), this.ConvertPathToInternal(destPath));
         }
 
         /// <inheritdoc />
@@ -176,7 +177,7 @@ namespace Zio.FileSystems
             {
                 throw new UnauthorizedAccessException($"The access to `{path}` is denied");
             }
-            File.Delete(ConvertPathToInternal(path));
+            File.Delete(this.ConvertPathToInternal(path));
         }
 
         /// <inheritdoc />
@@ -187,7 +188,7 @@ namespace Zio.FileSystems
             {
                 throw new UnauthorizedAccessException($"The access to `{path}` is denied");
             }
-            return File.Open(ConvertPathToInternal(path), mode, access, share);
+            return File.Open(this.ConvertPathToInternal(path), mode, access, share);
         }
 
         /// <inheritdoc />
@@ -209,7 +210,7 @@ namespace Zio.FileSystems
                 // Otherwise let the File.GetAttributes returns the proper attributes for root drive (e.g /drive/c)
             }
 
-            return File.GetAttributes(ConvertPathToInternal(path));
+            return File.GetAttributes(this.ConvertPathToInternal(path));
         }
 
         // ----------------------------------------------
@@ -229,7 +230,7 @@ namespace Zio.FileSystems
                 throw new UnauthorizedAccessException($"Cannot set attributes on system directory `{path}`");
             }
 
-            File.SetAttributes(ConvertPathToInternal(path), attributes);
+            File.SetAttributes(this.ConvertPathToInternal(path), attributes);
         }
 
         /// <inheritdoc />
@@ -264,7 +265,7 @@ namespace Zio.FileSystems
                 }
             }
 
-            return File.GetCreationTime(ConvertPathToInternal(path));
+            return File.GetCreationTime(this.ConvertPathToInternal(path));
         }
 
         /// <inheritdoc />
@@ -280,7 +281,7 @@ namespace Zio.FileSystems
                 throw new UnauthorizedAccessException($"Cannot set creation time on system directory `{path}`");
             }
 
-            File.SetCreationTime(ConvertPathToInternal(path), time);
+            File.SetCreationTime(this.ConvertPathToInternal(path), time);
         }
 
         /// <inheritdoc />
@@ -316,7 +317,7 @@ namespace Zio.FileSystems
                 // otherwise let the regular function running
             }
 
-            return File.GetLastAccessTime(ConvertPathToInternal(path));
+            return File.GetLastAccessTime(this.ConvertPathToInternal(path));
         }
 
         /// <inheritdoc />
@@ -331,7 +332,7 @@ namespace Zio.FileSystems
                 }
                 throw new UnauthorizedAccessException($"Cannot set last access time on system directory `{path}`");
             }
-            File.SetLastAccessTime(ConvertPathToInternal(path), time);
+            File.SetLastAccessTime(this.ConvertPathToInternal(path), time);
         }
 
         /// <inheritdoc />
@@ -367,7 +368,7 @@ namespace Zio.FileSystems
                 // otherwise let the regular function running
             }
 
-            return File.GetLastWriteTime(ConvertPathToInternal(path));
+            return File.GetLastWriteTime(this.ConvertPathToInternal(path));
         }
 
         /// <inheritdoc />
@@ -383,7 +384,7 @@ namespace Zio.FileSystems
                 throw new UnauthorizedAccessException($"Cannot set last write time on system directory `{path}`");
             }
 
-            File.SetLastWriteTime(ConvertPathToInternal(path), time);
+            File.SetLastWriteTime(this.ConvertPathToInternal(path), time);
         }
 
         // ----------------------------------------------
@@ -417,7 +418,7 @@ namespace Zio.FileSystems
 
                             if (searchOption == SearchOption.AllDirectories)
                             {
-                                foreach (var subPath in EnumeratePathsImpl(PathDrivePrefixOnWindows, searchPattern, searchOption, searchTarget))
+                                foreach (var subPath in this.EnumeratePathsImpl(PathDrivePrefixOnWindows, searchPattern, searchOption, searchTarget))
                                 {
                                     yield return subPath;
                                 }
@@ -455,7 +456,7 @@ namespace Zio.FileSystems
                         {
                             foreach (var pathDrive in pathDrives)
                             {
-                                foreach (var subPath in EnumeratePathsImpl(pathDrive, searchPattern, searchOption, searchTarget))
+                                foreach (var subPath in this.EnumeratePathsImpl(pathDrive, searchPattern, searchOption, searchTarget))
                                 {
                                     yield return subPath;
                                 }
@@ -471,15 +472,15 @@ namespace Zio.FileSystems
             switch (searchTarget)
             {
                 case SearchTarget.File:
-                    results = Directory.EnumerateFiles(ConvertPathToInternal(path), searchPattern, searchOption);
+                    results = Directory.EnumerateFiles(this.ConvertPathToInternal(path), searchPattern, searchOption);
                     break;
 
                 case SearchTarget.Directory:
-                    results = Directory.EnumerateDirectories(ConvertPathToInternal(path), searchPattern, searchOption);
+                    results = Directory.EnumerateDirectories(this.ConvertPathToInternal(path), searchPattern, searchOption);
                     break;
 
                 case SearchTarget.Both:
-                    results = Directory.EnumerateFileSystemEntries(ConvertPathToInternal(path), searchPattern, searchOption);
+                    results = Directory.EnumerateFileSystemEntries(this.ConvertPathToInternal(path), searchPattern, searchOption);
                     break;
                 
                 default:
@@ -493,7 +494,7 @@ namespace Zio.FileSystems
                 // not what we want. Check against the search pattern again to filter out those false results.
                 if (!IsOnWindows || search.Match(Path.GetFileName(subPath)))
                 {
-                    yield return ConvertPathFromInternal(subPath);
+                    yield return this.ConvertPathFromInternal(subPath);
                 }
             }
         }
@@ -510,7 +511,7 @@ namespace Zio.FileSystems
                 return SpecialDirectoryExists(path);
             }
 
-            return Directory.Exists(ConvertPathToInternal(path));
+            return Directory.Exists(this.ConvertPathToInternal(path));
         }
 
         /// <inheritdoc />
@@ -535,63 +536,63 @@ namespace Zio.FileSystems
             public event EventHandler<FileSystemErrorEventArgs> Error;
             public event EventHandler<FileRenamedEventArgs> Renamed;
 
-            public IFileSystem FileSystem => _fileSystem;
+            public IFileSystem FileSystem => this._fileSystem;
             public UPath Path { get; }
 
             public int InternalBufferSize
             {
-                get => _watcher.InternalBufferSize;
-                set => _watcher.InternalBufferSize = value;
+                get => this._watcher.InternalBufferSize;
+                set => this._watcher.InternalBufferSize = value;
             }
 
             public NotifyFilters NotifyFilter
             {
-                get => (NotifyFilters)_watcher.NotifyFilter;
-                set => _watcher.NotifyFilter = (System.IO.NotifyFilters)value;
+                get => (NotifyFilters) this._watcher.NotifyFilter;
+                set => this._watcher.NotifyFilter = (System.IO.NotifyFilters)value;
             }
 
             public bool EnableRaisingEvents
             {
-                get => _watcher.EnableRaisingEvents;
-                set => _watcher.EnableRaisingEvents = value;
+                get => this._watcher.EnableRaisingEvents;
+                set => this._watcher.EnableRaisingEvents = value;
             }
 
             public string Filter
             {
-                get => _watcher.Filter;
-                set => _watcher.Filter = value;
+                get => this._watcher.Filter;
+                set => this._watcher.Filter = value;
             }
 
             public bool IncludeSubdirectories
             {
-                get => _watcher.IncludeSubdirectories;
-                set => _watcher.IncludeSubdirectories = value;
+                get => this._watcher.IncludeSubdirectories;
+                set => this._watcher.IncludeSubdirectories = value;
             }
 
             public Watcher(PhysicalFileSystem fileSystem, UPath path)
             {
-                _fileSystem = fileSystem ?? throw new ArgumentNullException(nameof(fileSystem));
-                _watcher = new System.IO.FileSystemWatcher(_fileSystem.ConvertPathToInternal(path))
+                this._fileSystem = fileSystem ?? throw new ArgumentNullException(nameof(fileSystem));
+                this._watcher = new System.IO.FileSystemWatcher(this._fileSystem.ConvertPathToInternal(path))
                 {
                     Filter = "*"
                 };
-                Path = path;
+                this.Path = path;
 
-                _watcher.Changed += (sender, args) => Changed?.Invoke(this, Remap(args));
-                _watcher.Created += (sender, args) => Created?.Invoke(this, Remap(args));
-                _watcher.Deleted += (sender, args) => Deleted?.Invoke(this, Remap(args));
-                _watcher.Error += (sender, args) => Error?.Invoke(this, Remap(args));
-                _watcher.Renamed += (sender, args) => Renamed?.Invoke(this, Remap(args));
+                this._watcher.Changed += (sender, args) => this.Changed?.Invoke(this, this.Remap(args));
+                this._watcher.Created += (sender, args) => this.Created?.Invoke(this, this.Remap(args));
+                this._watcher.Deleted += (sender, args) => this.Deleted?.Invoke(this, this.Remap(args));
+                this._watcher.Error += (sender, args) => this.Error?.Invoke(this, this.Remap(args));
+                this._watcher.Renamed += (sender, args) => this.Renamed?.Invoke(this, this.Remap(args));
             }
 
             ~Watcher()
             {
-                Dispose(false);
+                this.Dispose(false);
             }
 
             public void Dispose()
             {
-                Dispose(true);
+                this.Dispose(true);
                 GC.SuppressFinalize(this);
             }
 
@@ -599,15 +600,15 @@ namespace Zio.FileSystems
             {
                 if (disposing)
                 {
-                    _watcher.Dispose();
+                    this._watcher.Dispose();
                 }
             }
 
             private FileChangedEventArgs Remap(FileSystemEventArgs args)
             {
                 var newChangeType = (WatcherChangeTypes)args.ChangeType;
-                var newPath = _fileSystem.ConvertPathFromInternal(args.FullPath);
-                return new FileChangedEventArgs(FileSystem, newChangeType, newPath);
+                var newPath = this._fileSystem.ConvertPathFromInternal(args.FullPath);
+                return new FileChangedEventArgs(this.FileSystem, newChangeType, newPath);
             }
 
             private FileSystemErrorEventArgs Remap(ErrorEventArgs args)
@@ -618,9 +619,9 @@ namespace Zio.FileSystems
             private FileRenamedEventArgs Remap(RenamedEventArgs args)
             {
                 var newChangeType = (WatcherChangeTypes)args.ChangeType;
-                var newPath = _fileSystem.ConvertPathFromInternal(args.FullPath);
-                var newOldPath = _fileSystem.ConvertPathFromInternal(args.OldFullPath);
-                return new FileRenamedEventArgs(FileSystem, newChangeType, newPath, newOldPath);
+                var newPath = this._fileSystem.ConvertPathFromInternal(args.FullPath);
+                var newOldPath = this._fileSystem.ConvertPathFromInternal(args.OldFullPath);
+                return new FileRenamedEventArgs(this.FileSystem, newChangeType, newPath, newOldPath);
             }
         }
 

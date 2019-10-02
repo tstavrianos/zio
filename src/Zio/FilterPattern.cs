@@ -30,7 +30,7 @@ namespace Zio
             path.AssertNotNull();
             var name = path.GetName();
             // if _execMatch is null and _regexMatch is null, we have a * match
-            return _exactMatch != null ? _exactMatch == name : _regexMatch == null || _regexMatch.IsMatch(name);
+            return this._exactMatch != null ? this._exactMatch == name : this._regexMatch?.IsMatch(name) != false;
         }
 
         /// <summary>
@@ -42,7 +42,7 @@ namespace Zio
         {
             if (fileName == null) throw new ArgumentNullException(nameof(fileName));
             // if _execMatch is null and _regexMatch is null, we have a * match
-            return _exactMatch != null ? _exactMatch == fileName : _regexMatch == null || _regexMatch.IsMatch(fileName);
+            return this._exactMatch != null ? this._exactMatch == fileName : this._regexMatch?.IsMatch(fileName) != false;
         }
 
         public FilterPattern(string filter)
@@ -57,8 +57,8 @@ namespace Zio
                 throw new ArgumentException("Filter cannot contain directory parts.", nameof(filter));
             }
 
-            _exactMatch = null;
-            _regexMatch = null;
+            this._exactMatch = null;
+            this._regexMatch = null;
 
             // Optimized path, most common cases
             if (filter == "" || filter == "*" || filter == "*.*")
@@ -66,7 +66,7 @@ namespace Zio
                 return;
             }
 
-            bool appendSpecialCaseForWildcardExt = false;
+            var appendSpecialCaseForWildcardExt = false;
             var startIndex = 0;
             StringBuilder builder = null;
 
@@ -105,7 +105,7 @@ namespace Zio
                 }
                 if (builder == null)
                 {
-                    _exactMatch = filter;
+                    this._exactMatch = filter;
                 }
                 else
                 {
@@ -126,7 +126,7 @@ namespace Zio
                     builder.Append("$");
 
                     var regexPattern = builder.ToString();
-                    _regexMatch = new Regex(regexPattern);
+                    this._regexMatch = new Regex(regexPattern);
                 }
             }
             finally

@@ -22,15 +22,15 @@ namespace Zio.FileSystems
         /// <param name="owned">True if <paramref name="fileSystem"/> should be disposed when this instance is disposed.</param>
         protected ComposeFileSystem(IFileSystem fileSystem, bool owned = true)
         {
-            NextFileSystem = fileSystem;
-            Owned = owned;
+            this.NextFileSystem = fileSystem;
+            this.Owned = owned;
         }
 
         protected override void Dispose(bool disposing)
         {
-            if (disposing && Owned)
+            if (disposing && this.Owned)
             {
-                NextFileSystem?.Dispose();
+                this.NextFileSystem?.Dispose();
             }
         }
 
@@ -46,11 +46,11 @@ namespace Zio.FileSystems
         {
             get
             {
-                if (NextFileSystem == null)
+                if (this.NextFileSystem == null)
                 {
                     throw new InvalidOperationException("The delegate filesystem for this instance is null");
                 }
-                return NextFileSystem;
+                return this.NextFileSystem;
             }
         }
 
@@ -61,25 +61,25 @@ namespace Zio.FileSystems
         /// <inheritdoc />
         protected override void CreateDirectoryImpl(UPath path)
         {
-            NextFileSystemSafe.CreateDirectory(ConvertPathToDelegate(path));
+            this.NextFileSystemSafe.CreateDirectory(this.ConvertPathToDelegate(path));
         }
 
         /// <inheritdoc />
         protected override bool DirectoryExistsImpl(UPath path)
         {
-            return NextFileSystemSafe.DirectoryExists(ConvertPathToDelegate(path));
+            return this.NextFileSystemSafe.DirectoryExists(this.ConvertPathToDelegate(path));
         }
 
         /// <inheritdoc />
         protected override void MoveDirectoryImpl(UPath srcPath, UPath destPath)
         {
-            NextFileSystemSafe.MoveDirectory(ConvertPathToDelegate(srcPath), ConvertPathToDelegate(destPath));
+            this.NextFileSystemSafe.MoveDirectory(this.ConvertPathToDelegate(srcPath), this.ConvertPathToDelegate(destPath));
         }
 
         /// <inheritdoc />
         protected override void DeleteDirectoryImpl(UPath path, bool isRecursive)
         {
-            NextFileSystemSafe.DeleteDirectory(ConvertPathToDelegate(path), isRecursive);
+            this.NextFileSystemSafe.DeleteDirectory(this.ConvertPathToDelegate(path), isRecursive);
         }
 
         // ----------------------------------------------
@@ -89,44 +89,44 @@ namespace Zio.FileSystems
         /// <inheritdoc />
         protected override void CopyFileImpl(UPath srcPath, UPath destPath, bool overwrite)
         {
-            NextFileSystemSafe.CopyFile(ConvertPathToDelegate(srcPath), ConvertPathToDelegate(destPath), overwrite);
+            this.NextFileSystemSafe.CopyFile(this.ConvertPathToDelegate(srcPath), this.ConvertPathToDelegate(destPath), overwrite);
         }
 
         /// <inheritdoc />
         protected override void ReplaceFileImpl(UPath srcPath, UPath destPath, UPath destBackupPath,
             bool ignoreMetadataErrors)
         {
-            NextFileSystemSafe.ReplaceFile(ConvertPathToDelegate(srcPath), ConvertPathToDelegate(destPath), destBackupPath.IsNull ? destBackupPath : ConvertPathToDelegate(destBackupPath), ignoreMetadataErrors);
+            this.NextFileSystemSafe.ReplaceFile(this.ConvertPathToDelegate(srcPath), this.ConvertPathToDelegate(destPath), destBackupPath.IsNull ? destBackupPath : this.ConvertPathToDelegate(destBackupPath), ignoreMetadataErrors);
         }
 
         /// <inheritdoc />
         protected override long GetFileLengthImpl(UPath path)
         {
-            return NextFileSystemSafe.GetFileLength(ConvertPathToDelegate(path));
+            return this.NextFileSystemSafe.GetFileLength(this.ConvertPathToDelegate(path));
         }
 
         /// <inheritdoc />
         protected override bool FileExistsImpl(UPath path)
         {
-            return NextFileSystemSafe.FileExists(ConvertPathToDelegate(path));
+            return this.NextFileSystemSafe.FileExists(this.ConvertPathToDelegate(path));
         }
 
         /// <inheritdoc />
         protected override void MoveFileImpl(UPath srcPath, UPath destPath)
         {
-            NextFileSystemSafe.MoveFile(ConvertPathToDelegate(srcPath), ConvertPathToDelegate(destPath));
+            this.NextFileSystemSafe.MoveFile(this.ConvertPathToDelegate(srcPath), this.ConvertPathToDelegate(destPath));
         }
 
         /// <inheritdoc />
         protected override void DeleteFileImpl(UPath path)
         {
-            NextFileSystemSafe.DeleteFile(ConvertPathToDelegate(path));
+            this.NextFileSystemSafe.DeleteFile(this.ConvertPathToDelegate(path));
         }
 
         /// <inheritdoc />
         protected override Stream OpenFileImpl(UPath path, FileMode mode, FileAccess access, FileShare share = FileShare.None)
         {
-            return NextFileSystemSafe.OpenFile(ConvertPathToDelegate(path), mode, access, share);
+            return this.NextFileSystemSafe.OpenFile(this.ConvertPathToDelegate(path), mode, access, share);
         }
 
         // ----------------------------------------------
@@ -136,49 +136,49 @@ namespace Zio.FileSystems
         /// <inheritdoc />
         protected override FileAttributes GetAttributesImpl(UPath path)
         {
-            return NextFileSystemSafe.GetAttributes(ConvertPathToDelegate(path));
+            return this.NextFileSystemSafe.GetAttributes(this.ConvertPathToDelegate(path));
         }
 
         /// <inheritdoc />
         protected override void SetAttributesImpl(UPath path, FileAttributes attributes)
         {
-            NextFileSystemSafe.SetAttributes(ConvertPathToDelegate(path), attributes);
+            this.NextFileSystemSafe.SetAttributes(this.ConvertPathToDelegate(path), attributes);
         }
 
         /// <inheritdoc />
         protected override DateTime GetCreationTimeImpl(UPath path)
         {
-            return NextFileSystemSafe.GetCreationTime(ConvertPathToDelegate(path));
+            return this.NextFileSystemSafe.GetCreationTime(this.ConvertPathToDelegate(path));
         }
 
         /// <inheritdoc />
         protected override void SetCreationTimeImpl(UPath path, DateTime time)
         {
-            NextFileSystemSafe.SetCreationTime(ConvertPathToDelegate(path), time);
+            this.NextFileSystemSafe.SetCreationTime(this.ConvertPathToDelegate(path), time);
         }
 
         /// <inheritdoc />
         protected override DateTime GetLastAccessTimeImpl(UPath path)
         {
-            return NextFileSystemSafe.GetLastAccessTime(ConvertPathToDelegate(path));
+            return this.NextFileSystemSafe.GetLastAccessTime(this.ConvertPathToDelegate(path));
         }
 
         /// <inheritdoc />
         protected override void SetLastAccessTimeImpl(UPath path, DateTime time)
         {
-            NextFileSystemSafe.SetLastAccessTime(ConvertPathToDelegate(path), time);
+            this.NextFileSystemSafe.SetLastAccessTime(this.ConvertPathToDelegate(path), time);
         }
 
         /// <inheritdoc />
         protected override DateTime GetLastWriteTimeImpl(UPath path)
         {
-            return NextFileSystemSafe.GetLastWriteTime(ConvertPathToDelegate(path));
+            return this.NextFileSystemSafe.GetLastWriteTime(this.ConvertPathToDelegate(path));
         }
 
         /// <inheritdoc />
         protected override void SetLastWriteTimeImpl(UPath path, DateTime time)
         {
-            NextFileSystemSafe.SetLastWriteTime(ConvertPathToDelegate(path), time);
+            this.NextFileSystemSafe.SetLastWriteTime(this.ConvertPathToDelegate(path), time);
         }
 
         // ----------------------------------------------
@@ -188,9 +188,9 @@ namespace Zio.FileSystems
         /// <inheritdoc />
         protected override IEnumerable<UPath> EnumeratePathsImpl(UPath path, string searchPattern, SearchOption searchOption, SearchTarget searchTarget)
         {
-            foreach (var subPath in NextFileSystemSafe.EnumeratePaths(ConvertPathToDelegate(path), searchPattern, searchOption, searchTarget))
+            foreach (var subPath in this.NextFileSystemSafe.EnumeratePaths(this.ConvertPathToDelegate(path), searchPattern, searchOption, searchTarget))
             {
-                yield return ConvertPathFromDelegate(subPath);
+                yield return this.ConvertPathFromDelegate(subPath);
             }
         }
 
@@ -201,13 +201,13 @@ namespace Zio.FileSystems
         /// <inheritdoc />
         protected override bool CanWatchImpl(UPath path)
         {
-            return NextFileSystemSafe.CanWatch(ConvertPathToDelegate(path));
+            return this.NextFileSystemSafe.CanWatch(this.ConvertPathToDelegate(path));
         }
 
         /// <inheritdoc />
         protected override IFileSystemWatcher WatchImpl(UPath path)
         {
-            return NextFileSystemSafe.Watch(ConvertPathToDelegate(path));
+            return this.NextFileSystemSafe.Watch(this.ConvertPathToDelegate(path));
         }
 
         // ----------------------------------------------
@@ -217,13 +217,13 @@ namespace Zio.FileSystems
         /// <inheritdoc />
         protected override string ConvertPathToInternalImpl(UPath path)
         {
-            return NextFileSystemSafe.ConvertPathToInternal(ConvertPathToDelegate(path));
+            return this.NextFileSystemSafe.ConvertPathToInternal(this.ConvertPathToDelegate(path));
         }
 
         /// <inheritdoc />
         protected override UPath ConvertPathFromInternalImpl(string innerPath)
         {
-            return ConvertPathFromDelegate(NextFileSystemSafe.ConvertPathFromInternal(innerPath));
+            return this.ConvertPathFromDelegate(this.NextFileSystemSafe.ConvertPathFromInternal(innerPath));
         }
 
         /// <summary>

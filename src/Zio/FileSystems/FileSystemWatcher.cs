@@ -44,7 +44,7 @@ namespace Zio.FileSystems
         /// <inheritdoc />
         public virtual string Filter
         {
-            get => _filter;
+            get => this._filter;
             set
             {
                 if (string.IsNullOrEmpty(value))
@@ -52,13 +52,13 @@ namespace Zio.FileSystems
                     value = "*";
                 }
 
-                if (value == _filter)
+                if (value == this._filter)
                 {
                     return;
                 }
 
-                _filterPattern = FilterPattern.Parse(value);
-                _filter = value;
+                this._filterPattern = FilterPattern.Parse(value);
+                this._filter = value;
             }
         }
 
@@ -73,19 +73,19 @@ namespace Zio.FileSystems
             }
             path.AssertAbsolute();
 
-            FileSystem = fileSystem;
-            Path = path;
-            _filter = "*.*";
+            this.FileSystem = fileSystem;
+            this.Path = path;
+            this._filter = "*.*";
         }
 
         ~FileSystemWatcher()
         {
-            Dispose(false);
+            this.Dispose(false);
         }
 
         public void Dispose()
         {
-            Dispose(true);
+            this.Dispose(true);
             GC.SuppressFinalize(this);
         }
 
@@ -99,12 +99,12 @@ namespace Zio.FileSystems
         /// <param name="args">Arguments for the event.</param>
         public void RaiseChanged(FileChangedEventArgs args)
         {
-            if (!ShouldRaiseEvent(args))
+            if (!this.ShouldRaiseEvent(args))
             {
                 return;
             }
 
-            Changed?.Invoke(this, args);
+            this.Changed?.Invoke(this, args);
         }
 
         /// <summary>
@@ -113,12 +113,12 @@ namespace Zio.FileSystems
         /// <param name="args">Arguments for the event.</param>
         public void RaiseCreated(FileChangedEventArgs args)
         {
-            if (!ShouldRaiseEvent(args))
+            if (!this.ShouldRaiseEvent(args))
             {
                 return;
             }
 
-            Created?.Invoke(this, args);
+            this.Created?.Invoke(this, args);
         }
 
         /// <summary>
@@ -127,12 +127,12 @@ namespace Zio.FileSystems
         /// <param name="args">Arguments for the event.</param>
         public void RaiseDeleted(FileChangedEventArgs args)
         {
-            if (!ShouldRaiseEvent(args))
+            if (!this.ShouldRaiseEvent(args))
             {
                 return;
             }
 
-            Deleted?.Invoke(this, args);
+            this.Deleted?.Invoke(this, args);
         }
 
         /// <summary>
@@ -141,12 +141,12 @@ namespace Zio.FileSystems
         /// <param name="args">Arguments for the event.</param>
         public void RaiseError(FileSystemErrorEventArgs args)
         {
-            if (!EnableRaisingEvents)
+            if (!this.EnableRaisingEvents)
             {
                 return;
             }
 
-            Error?.Invoke(this, args);
+            this.Error?.Invoke(this, args);
         }
 
         /// <summary>
@@ -155,19 +155,17 @@ namespace Zio.FileSystems
         /// <param name="args">Arguments for the event.</param>
         public void RaiseRenamed(FileRenamedEventArgs args)
         {
-            if (!ShouldRaiseEvent(args))
+            if (!this.ShouldRaiseEvent(args))
             {
                 return;
             }
 
-            Renamed?.Invoke(this, args);
+            this.Renamed?.Invoke(this, args);
         }
 
         private bool ShouldRaiseEvent(FileChangedEventArgs args)
         {
-            return EnableRaisingEvents &&
-                   _filterPattern.Match(args.Name) &&
-                   ShouldRaiseEventImpl(args);
+            return this.EnableRaisingEvents && this._filterPattern.Match(args.Name) && this.ShouldRaiseEventImpl(args);
         }
 
         /// <summary>
@@ -178,7 +176,7 @@ namespace Zio.FileSystems
         /// <returns>True if the event should be raised, false to ignore it.</returns>
         protected virtual bool ShouldRaiseEventImpl(FileChangedEventArgs args)
         {
-            return args.FullPath.IsInDirectory(Path, IncludeSubdirectories);
+            return args.FullPath.IsInDirectory(this.Path, this.IncludeSubdirectories);
         }
 
         /// <summary>
@@ -193,11 +191,11 @@ namespace Zio.FileSystems
                 throw new ArgumentNullException(nameof(watcher));
             }
 
-            watcher.Changed += OnChanged;
-            watcher.Created += OnCreated;
-            watcher.Deleted += OnDeleted;
-            watcher.Error += OnError;
-            watcher.Renamed += OnRenamed;
+            watcher.Changed += this.OnChanged;
+            watcher.Created += this.OnCreated;
+            watcher.Deleted += this.OnDeleted;
+            watcher.Error += this.OnError;
+            watcher.Renamed += this.OnRenamed;
         }
 
         /// <summary>
@@ -211,11 +209,11 @@ namespace Zio.FileSystems
                 throw new ArgumentNullException(nameof(watcher));
             }
 
-            watcher.Changed -= OnChanged;
-            watcher.Created -= OnCreated;
-            watcher.Deleted -= OnDeleted;
-            watcher.Error -= OnError;
-            watcher.Renamed -= OnRenamed;
+            watcher.Changed -= this.OnChanged;
+            watcher.Created -= this.OnCreated;
+            watcher.Deleted -= this.OnDeleted;
+            watcher.Error -= this.OnError;
+            watcher.Renamed -= this.OnRenamed;
         }
 
         /// <summary>
@@ -231,61 +229,61 @@ namespace Zio.FileSystems
 
         private void OnChanged(object sender, FileChangedEventArgs args)
         {
-            var newPath = TryConvertPath(args.FullPath);
+            var newPath = this.TryConvertPath(args.FullPath);
             if (!newPath.HasValue)
             {
                 return;
             }
 
-            var newArgs = new FileChangedEventArgs(FileSystem, args.ChangeType, newPath.Value);
-            RaiseChanged(newArgs);
+            var newArgs = new FileChangedEventArgs(this.FileSystem, args.ChangeType, newPath.Value);
+            this.RaiseChanged(newArgs);
         }
 
         private void OnCreated(object sender, FileChangedEventArgs args)
         {
-            var newPath = TryConvertPath(args.FullPath);
+            var newPath = this.TryConvertPath(args.FullPath);
             if (!newPath.HasValue)
             {
                 return;
             }
 
-            var newArgs = new FileChangedEventArgs(FileSystem, args.ChangeType, newPath.Value);
-            RaiseCreated(newArgs);
+            var newArgs = new FileChangedEventArgs(this.FileSystem, args.ChangeType, newPath.Value);
+            this.RaiseCreated(newArgs);
         }
 
         private void OnDeleted(object sender, FileChangedEventArgs args)
         {
-            var newPath = TryConvertPath(args.FullPath);
+            var newPath = this.TryConvertPath(args.FullPath);
             if (!newPath.HasValue)
             {
                 return;
             }
 
-            var newArgs = new FileChangedEventArgs(FileSystem, args.ChangeType, newPath.Value);
-            RaiseDeleted(newArgs);
+            var newArgs = new FileChangedEventArgs(this.FileSystem, args.ChangeType, newPath.Value);
+            this.RaiseDeleted(newArgs);
         }
 
         private void OnError(object sender, FileSystemErrorEventArgs args)
         {
-            RaiseError(args);
+            this.RaiseError(args);
         }
 
         private void OnRenamed(object sender, FileRenamedEventArgs args)
         {
-            var newPath = TryConvertPath(args.FullPath);
+            var newPath = this.TryConvertPath(args.FullPath);
             if (!newPath.HasValue)
             {
                 return;
             }
 
-            var newOldPath = TryConvertPath(args.OldFullPath);
+            var newOldPath = this.TryConvertPath(args.OldFullPath);
             if (!newOldPath.HasValue)
             {
                 return;
             }
             
-            var newArgs = new FileRenamedEventArgs(FileSystem, args.ChangeType, newPath.Value, newOldPath.Value);
-            RaiseRenamed(newArgs);
+            var newArgs = new FileRenamedEventArgs(this.FileSystem, args.ChangeType, newPath.Value, newOldPath.Value);
+            this.RaiseRenamed(newArgs);
         }
     }
 }

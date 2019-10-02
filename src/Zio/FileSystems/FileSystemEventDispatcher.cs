@@ -21,56 +21,56 @@ namespace Zio.FileSystems
 
         public FileSystemEventDispatcher(IFileSystem fileSystem)
         {
-            FileSystem = fileSystem ?? throw new ArgumentNullException(nameof(fileSystem));
-            _dispatchThread = new Thread(DispatchWorker)
+            this.FileSystem = fileSystem ?? throw new ArgumentNullException(nameof(fileSystem));
+            this._dispatchThread = new Thread(this.DispatchWorker)
             {
                 Name = "FileSystem Event Dispatch",
                 IsBackground = true
             };
 
-            _dispatchQueue = new BlockingCollection<Action>(16);
-            _dispatchCts = new CancellationTokenSource();
-            _watchers = new List<T>();
+            this._dispatchQueue = new BlockingCollection<Action>(16);
+            this._dispatchCts = new CancellationTokenSource();
+            this._watchers = new List<T>();
 
-            _dispatchThread.Start();
+            this._dispatchThread.Start();
         }
 
         public IFileSystem FileSystem { get; }
 
         ~FileSystemEventDispatcher()
         {
-            Dispose(false);
+            this.Dispose(false);
         }
 
         public void Dispose()
         {
-            Dispose(true);
+            this.Dispose(true);
             GC.SuppressFinalize(this);
         }
 
         protected virtual void Dispose(bool disposing)
         {
-            _dispatchCts?.Cancel();
-            _dispatchThread?.Join();
+            this._dispatchCts?.Cancel();
+            this._dispatchThread?.Join();
 
             if (!disposing)
             {
                 return;
             }
 
-            _dispatchQueue.CompleteAdding();
+            this._dispatchQueue.CompleteAdding();
 
-            lock (_watchers)
+            lock (this._watchers)
             {
-                foreach (var watcher in _watchers)
+                foreach (var watcher in this._watchers)
                 {
                     watcher.Dispose();
                 }
 
-                _watchers.Clear();
+                this._watchers.Clear();
             }
 
-            _dispatchQueue.Dispose();
+            this._dispatchQueue.Dispose();
         }
 
         /// <summary>
@@ -79,9 +79,9 @@ namespace Zio.FileSystems
         /// <param name="watcher">Instance to add.</param>
         public void Add(T watcher)
         {
-            lock (_watchers)
+            lock (this._watchers)
             {
-                _watchers.Add(watcher);
+                this._watchers.Add(watcher);
             }
         }
 
@@ -91,9 +91,9 @@ namespace Zio.FileSystems
         /// <param name="watcher">Instance to remove.</param>
         public void Remove(T watcher)
         {
-            lock (_watchers)
+            lock (this._watchers)
             {
-                _watchers.Remove(watcher);
+                this._watchers.Remove(watcher);
             }
         }
 
@@ -103,8 +103,8 @@ namespace Zio.FileSystems
         /// <param name="path">Absolute path to the changed file or directory.</param>
         public void RaiseChange(UPath path)
         {
-            var args = new FileChangedEventArgs(FileSystem, WatcherChangeTypes.Changed, path);
-            Dispatch(args, (w, a) => w.RaiseChanged(a));
+            var args = new FileChangedEventArgs(this.FileSystem, WatcherChangeTypes.Changed, path);
+            this.Dispatch(args, (w, a) => w.RaiseChanged(a));
         }
 
         /// <summary>
@@ -113,8 +113,8 @@ namespace Zio.FileSystems
         /// <param name="path">Absolute path to the new file or directory.</param>
         public void RaiseCreated(UPath path)
         {
-            var args = new FileChangedEventArgs(FileSystem, WatcherChangeTypes.Created, path);
-            Dispatch(args, (w, a) => w.RaiseCreated(a));
+            var args = new FileChangedEventArgs(this.FileSystem, WatcherChangeTypes.Created, path);
+            this.Dispatch(args, (w, a) => w.RaiseCreated(a));
         }
         
         /// <summary>
@@ -123,8 +123,8 @@ namespace Zio.FileSystems
         /// <param name="path">Absolute path to the changed file or directory.</param>
         public void RaiseDeleted(UPath path)
         {
-            var args = new FileChangedEventArgs(FileSystem, WatcherChangeTypes.Deleted, path);
-            Dispatch(args, (w, a) => w.RaiseDeleted(a));
+            var args = new FileChangedEventArgs(this.FileSystem, WatcherChangeTypes.Deleted, path);
+            this.Dispatch(args, (w, a) => w.RaiseDeleted(a));
         }
 
         /// <summary>
@@ -134,8 +134,8 @@ namespace Zio.FileSystems
         /// <param name="oldPath">Absolute path to the old file or directory.</param>
         public void RaiseRenamed(UPath newPath, UPath oldPath)
         {
-            var args = new FileRenamedEventArgs(FileSystem, WatcherChangeTypes.Renamed, newPath, oldPath);
-            Dispatch(args, (w, a) => w.RaiseRenamed(a));
+            var args = new FileRenamedEventArgs(this.FileSystem, WatcherChangeTypes.Renamed, newPath, oldPath);
+            this.Dispatch(args, (w, a) => w.RaiseRenamed(a));
         }
 
         /// <summary>
@@ -145,26 +145,26 @@ namespace Zio.FileSystems
         public void RaiseError(Exception exception)
         {
             var args = new FileSystemErrorEventArgs(exception);
-            Dispatch(args, (w, a) => w.RaiseError(a), false);
+            this.Dispatch(args, (w, a) => w.RaiseError(a), false);
         }
 
         private void Dispatch<TArgs>(TArgs eventArgs, Action<T, TArgs> handler, bool captureError = true)
             where TArgs : EventArgs
         {
             List<T> watchersSnapshot;
-            lock (_watchers)
+            lock (this._watchers)
             {
-                if (_watchers.Count == 0)
+                if (this._watchers.Count == 0)
                 {
                     return;
                 }
 
-                watchersSnapshot = _watchers.ToList(); // TODO: reduce allocations
+                watchersSnapshot = this._watchers.ToList(); // TODO: reduce allocations
             }
 
             // The events should be called on a separate thread because the filesystem code
             // could be holding locks that must be released.
-            _dispatchQueue.Add(() =>
+            this._dispatchQueue.Add(() =>
             {
                 foreach (var watcher in watchersSnapshot)
                 {
@@ -174,7 +174,7 @@ namespace Zio.FileSystems
                     }
                     catch (Exception e) when (captureError)
                     {
-                        RaiseError(e);
+                        this.RaiseError(e);
                     }
                 }
             });
@@ -183,11 +183,11 @@ namespace Zio.FileSystems
         // Worker runs on dedicated thread to call events
         private void DispatchWorker()
         {
-            var ct = _dispatchCts.Token;
+            var ct = this._dispatchCts.Token;
 
             try
             {
-                foreach (var action in _dispatchQueue.GetConsumingEnumerable(ct))
+                foreach (var action in this._dispatchQueue.GetConsumingEnumerable(ct))
                 {
                     action();
                 }

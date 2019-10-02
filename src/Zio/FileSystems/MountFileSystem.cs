@@ -4,7 +4,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using static Zio.FileSystemExceptionHelper;
@@ -35,8 +34,8 @@ namespace Zio.FileSystems
         /// <param name="owned">True if <paramref name="defaultBackupFileSystem"/> and mounted filesytems should be disposed when this instance is disposed.</param>
         public MountFileSystem(IFileSystem defaultBackupFileSystem, bool owned = true) : base(defaultBackupFileSystem, owned)
         {
-            _mounts = new SortedList<UPath, IFileSystem>(new UPathLengthComparer());
-            _watchers = new List<AggregateWatcher>();
+            this._mounts = new SortedList<UPath, IFileSystem>(new UPathLengthComparer());
+            this._watchers = new List<AggregateWatcher>();
         }
 
         protected override void Dispose(bool disposing)
@@ -48,27 +47,27 @@ namespace Zio.FileSystems
                 return;
             }
 
-            lock (_mounts)
+            lock (this._mounts)
             {
-                lock (_watchers)
+                lock (this._watchers)
                 {
-                    foreach (var watcher in _watchers)
+                    foreach (var watcher in this._watchers)
                     {
                         watcher.Dispose();
                     }
 
-                    _watchers.Clear();
+                    this._watchers.Clear();
                 }
 
-                if (Owned)
+                if (this.Owned)
                 {
-                    foreach (var kvp in _mounts)
+                    foreach (var kvp in this._mounts)
                     {
                         kvp.Value.Dispose();
                     }
                 }
 
-                _mounts.Clear();
+                this._mounts.Clear();
             }
         }
 
@@ -90,19 +89,21 @@ namespace Zio.FileSystems
             {
                 throw new ArgumentException("Cannot recursively mount the filesystem to self", nameof(fileSystem));
             }
-            AssertMountName(name);
 
-            lock (_mounts)
+            this.AssertMountName(name);
+
+            lock (this._mounts)
             {
-                if (_mounts.ContainsKey(name))
+                if (this._mounts.ContainsKey(name))
                 {
                     throw new ArgumentException($"There is already a mount with the same name: `{name}`", nameof(name));
                 }
-                _mounts.Add(name, fileSystem);
 
-                lock (_watchers)
+                this._mounts.Add(name, fileSystem);
+
+                lock (this._watchers)
                 {
-                    foreach (var watcher in _watchers)
+                    foreach (var watcher in this._watchers)
                     {
                         if (!IsMountIncludedInWatch(name, watcher.Path, out var remainingPath))
                         {
@@ -126,11 +127,11 @@ namespace Zio.FileSystems
         /// <returns><c>true</c> if the specified name is mounted; otherwise, <c>false</c>.</returns>
         public bool IsMounted(UPath name)
         {
-            AssertMountName(name);
+            this.AssertMountName(name);
 
-            lock (_mounts)
+            lock (this._mounts)
             {
-                return _mounts.ContainsKey(name);
+                return this._mounts.ContainsKey(name);
             }
         }
 
@@ -141,9 +142,9 @@ namespace Zio.FileSystems
         public Dictionary<UPath, IFileSystem> GetMounts()
         {
             var dict = new Dictionary<UPath, IFileSystem>();
-            lock (_mounts)
+            lock (this._mounts)
             {
-                foreach (var mount in _mounts)
+                foreach (var mount in this._mounts)
                 {
                     dict.Add(mount.Key, mount.Value);
                 }
@@ -159,26 +160,26 @@ namespace Zio.FileSystems
         /// <exception cref="System.ArgumentException">The mount with the name <paramref name="name"/> was not found</exception>
         public IFileSystem Unmount(UPath name)
         {
-            AssertMountName(name);
+            this.AssertMountName(name);
 
             IFileSystem mountFileSystem;
 
-            lock (_mounts)
+            lock (this._mounts)
             {
-                if (!_mounts.TryGetValue(name, out mountFileSystem))
+                if (!this._mounts.TryGetValue(name, out mountFileSystem))
                 {
                     throw new ArgumentException($"The mount with the name `{name}` was not found");
                 }
 
-                lock (_watchers)
+                lock (this._watchers)
                 {
-                    foreach (var watcher in _watchers)
+                    foreach (var watcher in this._watchers)
                     {
                         watcher.RemoveFrom(mountFileSystem);
                     }
                 }
 
-                _mounts.Remove(name);
+                this._mounts.Remove(name);
             }
 
             return mountFileSystem;
@@ -199,7 +200,7 @@ namespace Zio.FileSystems
             path.AssertNotNull();
             path.AssertAbsolute();
 
-            var fs = TryGetMountOrNext(ref path, out name);
+            var fs = this.TryGetMountOrNext(ref path, out name);
 
             if (fs == null || name.IsNull)
             {
@@ -226,9 +227,9 @@ namespace Zio.FileSystems
             if (fileSystem == null)
                 throw new ArgumentNullException(nameof(fileSystem));
 
-            lock (_mounts)
+            lock (this._mounts)
             {
-                foreach (var mount in _mounts)
+                foreach (var mount in this._mounts)
                 {
                     if (mount.Value != fileSystem)
                         continue;
@@ -246,7 +247,7 @@ namespace Zio.FileSystems
         protected override void CreateDirectoryImpl(UPath path)
         {
             var originalSrcPath = path;
-            var fs = TryGetMountOrNext(ref path);
+            var fs = this.TryGetMountOrNext(ref path);
             if (fs != null && path != UPath.Root)
             {
                 fs.CreateDirectory(path);
@@ -264,16 +265,16 @@ namespace Zio.FileSystems
             {
                 return true;
             }
-            var fs = TryGetMountOrNext(ref path);
+            var fs = this.TryGetMountOrNext(ref path);
             if (fs != null)
             {
                 return path == UPath.Root || fs.DirectoryExists(path);
             }
 
             // Check if the path is part of a mount name
-            lock (_mounts)
+            lock (this._mounts)
             {
-                foreach (var kvp in _mounts)
+                foreach (var kvp in this._mounts)
                 {
                     var remainingPath = GetRemaining(path, kvp.Key);
                     if (!remainingPath.IsNull)
@@ -292,8 +293,8 @@ namespace Zio.FileSystems
             var originalSrcPath = srcPath;
             var originalDestPath = destPath;
 
-            var srcfs = TryGetMountOrNext(ref srcPath);
-            var destfs = TryGetMountOrNext(ref destPath);
+            var srcfs = this.TryGetMountOrNext(ref srcPath);
+            var destfs = this.TryGetMountOrNext(ref destPath);
 
             if (srcfs != null && srcPath == UPath.Root)
             {
@@ -320,7 +321,7 @@ namespace Zio.FileSystems
         protected override void DeleteDirectoryImpl(UPath path, bool isRecursive)
         {
             var originalSrcPath = path;
-            var mountfs = TryGetMountOrNext(ref path);
+            var mountfs = this.TryGetMountOrNext(ref path);
 
             if (mountfs != null && path == UPath.Root)
             {
@@ -343,8 +344,8 @@ namespace Zio.FileSystems
             var originalSrcPath = srcPath;
             var originalDestPath = destPath;
 
-            var srcfs = TryGetMountOrNext(ref srcPath);
-            var destfs = TryGetMountOrNext(ref destPath);
+            var srcfs = this.TryGetMountOrNext(ref srcPath);
+            var destfs = this.TryGetMountOrNext(ref destPath);
 
             if (srcfs != null && destfs != null)
             {
@@ -376,19 +377,19 @@ namespace Zio.FileSystems
             var originalDestPath = destPath;
             var originalDestBackupPath = destBackupPath;
 
-            if (!FileExistsImpl(srcPath))
+            if (!this.FileExistsImpl(srcPath))
             {
                 throw NewFileNotFoundException(srcPath);
             }
 
-            if (!FileExistsImpl(destPath))
+            if (!this.FileExistsImpl(destPath))
             {
                 throw NewFileNotFoundException(destPath);
             }
 
-            var srcfs = TryGetMountOrNext(ref srcPath);
-            var destfs = TryGetMountOrNext(ref destPath);
-            var backupfs = TryGetMountOrNext(ref destBackupPath);
+            var srcfs = this.TryGetMountOrNext(ref srcPath);
+            var destfs = this.TryGetMountOrNext(ref destPath);
+            var backupfs = this.TryGetMountOrNext(ref destBackupPath);
 
             if (srcfs != null && srcfs == destfs && (destBackupPath.IsNull || srcfs == backupfs))
             {
@@ -405,7 +406,7 @@ namespace Zio.FileSystems
         protected override long GetFileLengthImpl(UPath path)
         {
             var originalSrcPath = path;
-            var mountfs = TryGetMountOrNext(ref path);
+            var mountfs = this.TryGetMountOrNext(ref path);
 
             if (mountfs != null)
             {
@@ -417,7 +418,7 @@ namespace Zio.FileSystems
         /// <inheritdoc />
         protected override bool FileExistsImpl(UPath path)
         {
-            var mountfs = TryGetMountOrNext(ref path);
+            var mountfs = this.TryGetMountOrNext(ref path);
             return mountfs?.FileExists(path) ?? false;
         }
 
@@ -426,24 +427,24 @@ namespace Zio.FileSystems
         {
             var originalSrcPath = srcPath;
             var originalDestPath = destPath;
-            if (!FileExistsImpl(srcPath))
+            if (!this.FileExistsImpl(srcPath))
             {
                 throw NewFileNotFoundException(srcPath);
             }
 
             var destDirectory = destPath.GetDirectory();
-            if (!DirectoryExistsImpl(destDirectory))
+            if (!this.DirectoryExistsImpl(destDirectory))
             {
                 throw NewDirectoryNotFoundException(destDirectory);
             }
 
-            if (FileExistsImpl(destPath))
+            if (this.FileExistsImpl(destPath))
             {
                 throw new IOException($"The destination path `{destPath}` already exists");
             }
 
-            var srcfs = TryGetMountOrNext(ref srcPath);
-            var destfs = TryGetMountOrNext(ref destPath);
+            var srcfs = this.TryGetMountOrNext(ref srcPath);
+            var destfs = this.TryGetMountOrNext(ref destPath);
 
             if (srcfs != null && srcfs == destfs)
             {
@@ -466,7 +467,7 @@ namespace Zio.FileSystems
         /// <inheritdoc />
         protected override void DeleteFileImpl(UPath path)
         {
-            var mountfs = TryGetMountOrNext(ref path);
+            var mountfs = this.TryGetMountOrNext(ref path);
             mountfs?.DeleteFile(path);
         }
 
@@ -474,7 +475,7 @@ namespace Zio.FileSystems
         protected override Stream OpenFileImpl(UPath path, FileMode mode, FileAccess access, FileShare share = FileShare.None)
         {
             var originalSrcPath = path;
-            var mountfs = TryGetMountOrNext(ref path);
+            var mountfs = this.TryGetMountOrNext(ref path);
 
             if (mountfs != null)
             {
@@ -493,7 +494,7 @@ namespace Zio.FileSystems
         protected override FileAttributes GetAttributesImpl(UPath path)
         {
             var originalSrcPath = path;
-            var mountfs = TryGetMountOrNext(ref path);
+            var mountfs = this.TryGetMountOrNext(ref path);
             if (mountfs != null)
             {
                 return mountfs.GetAttributes(path);
@@ -505,7 +506,7 @@ namespace Zio.FileSystems
         protected override void SetAttributesImpl(UPath path, FileAttributes attributes)
         {
             var originalSrcPath = path;
-            var mountfs = TryGetMountOrNext(ref path);
+            var mountfs = this.TryGetMountOrNext(ref path);
             if (mountfs != null)
             {
                 mountfs.SetAttributes(path, attributes);
@@ -519,14 +520,14 @@ namespace Zio.FileSystems
         /// <inheritdoc />
         protected override DateTime GetCreationTimeImpl(UPath path)
         {
-            return TryGetMountOrNext(ref path)?.GetCreationTime(path) ?? DefaultFileTime;
+            return this.TryGetMountOrNext(ref path)?.GetCreationTime(path) ?? DefaultFileTime;
         }
 
         /// <inheritdoc />
         protected override void SetCreationTimeImpl(UPath path, DateTime time)
         {
             var originalSrcPath = path;
-            var mountfs = TryGetMountOrNext(ref path);
+            var mountfs = this.TryGetMountOrNext(ref path);
             if (mountfs != null)
             {
                 mountfs.SetCreationTime(path, time);
@@ -540,14 +541,14 @@ namespace Zio.FileSystems
         /// <inheritdoc />
         protected override DateTime GetLastAccessTimeImpl(UPath path)
         {
-            return TryGetMountOrNext(ref path)?.GetLastAccessTime(path) ?? DefaultFileTime;
+            return this.TryGetMountOrNext(ref path)?.GetLastAccessTime(path) ?? DefaultFileTime;
         }
 
         /// <inheritdoc />
         protected override void SetLastAccessTimeImpl(UPath path, DateTime time)
         {
             var originalSrcPath = path;
-            var mountfs = TryGetMountOrNext(ref path);
+            var mountfs = this.TryGetMountOrNext(ref path);
             if (mountfs != null)
             {
                 mountfs.SetLastAccessTime(path, time);
@@ -561,14 +562,14 @@ namespace Zio.FileSystems
         /// <inheritdoc />
         protected override DateTime GetLastWriteTimeImpl(UPath path)
         {
-            return TryGetMountOrNext(ref path)?.GetLastWriteTime(path) ?? DefaultFileTime;
+            return this.TryGetMountOrNext(ref path)?.GetLastWriteTime(path) ?? DefaultFileTime;
         }
 
         /// <inheritdoc />
         protected override void SetLastWriteTimeImpl(UPath path, DateTime time)
         {
             var originalSrcPath = path;
-            var mountfs = TryGetMountOrNext(ref path);
+            var mountfs = this.TryGetMountOrNext(ref path);
             if (mountfs != null)
             {
                 mountfs.SetLastWriteTime(path, time);
@@ -587,9 +588,9 @@ namespace Zio.FileSystems
 
             // Query all mounts just once
             List<KeyValuePair<UPath, IFileSystem>> mounts;
-            lock (_mounts)
+            lock (this._mounts)
             {
-                mounts = _mounts.ToList();
+                mounts = this._mounts.ToList();
             }
 
             // Internal method used to retrieve the list of search locations
@@ -624,9 +625,9 @@ namespace Zio.FileSystems
                     }
                 }
 
-                if (!matchedMount && NextFileSystem != null && NextFileSystem.DirectoryExists(basePath))
+                if (!matchedMount && this.NextFileSystem?.DirectoryExists(basePath) == true)
                 {
-                    locations.Add(new SearchLocation(NextFileSystem, null, basePath));
+                    locations.Add(new SearchLocation(this.NextFileSystem, null, basePath));
                 }
 
                 return locations;
@@ -749,10 +750,10 @@ namespace Zio.FileSystems
             
             var watcher = new AggregateWatcher(this, path);
 
-            lock (_mounts)
-            lock (_watchers)
+            lock (this._mounts)
+            lock (this._watchers)
             {
-                foreach (var kvp in _mounts)
+                foreach (var kvp in this._mounts)
                 {
                     if (!IsMountIncludedInWatch(kvp.Key, path, out var remainingPath))
                     {
@@ -766,13 +767,13 @@ namespace Zio.FileSystems
                     }
                 }
 
-                if (NextFileSystem != null && NextFileSystem.CanWatch(path))
+                if (this.NextFileSystem?.CanWatch(path) == true)
                 {
-                    var internalWatcher = NextFileSystem.Watch(path);
-                    watcher.Add(new WrapWatcher(NextFileSystem, null, path, internalWatcher));
+                    var internalWatcher = this.NextFileSystem.Watch(path);
+                    watcher.Add(new WrapWatcher(this.NextFileSystem, null, path, internalWatcher));
                 }
 
-                _watchers.Add(watcher);
+                this._watchers.Add(watcher);
             }
 
             return watcher;
@@ -785,16 +786,16 @@ namespace Zio.FileSystems
             public AggregateWatcher(MountFileSystem fileSystem, UPath path)
                 : base(fileSystem, path)
             {
-                _fileSystem = fileSystem;
+                this._fileSystem = fileSystem;
             }
 
             protected override void Dispose(bool disposing)
             {
-                if (disposing && !_fileSystem.IsDisposing)
+                if (disposing && !this._fileSystem.IsDisposing)
                 {
-                    lock (_fileSystem._watchers)
+                    lock (this._fileSystem._watchers)
                     {
-                        _fileSystem._watchers.Remove(this);
+                        this._fileSystem._watchers.Remove(this);
                     }
                 }
             }
@@ -807,14 +808,14 @@ namespace Zio.FileSystems
             public WrapWatcher(IFileSystem fileSystem, UPath mountPath, UPath path, IFileSystemWatcher watcher)
                 : base(fileSystem, path, watcher)
             {
-                _mountPath = mountPath;
+                this._mountPath = mountPath;
             }
 
             protected override UPath? TryConvertPath(UPath pathFromEvent)
             {
-                if (!_mountPath.IsNull)
+                if (!this._mountPath.IsNull)
                 {
-                    return _mountPath / pathFromEvent.ToRelative();
+                    return this._mountPath / pathFromEvent.ToRelative();
                 }
                 else
                 {
@@ -837,7 +838,7 @@ namespace Zio.FileSystems
 
         private IFileSystem TryGetMountOrNext(ref UPath path)
         {
-            return TryGetMountOrNext(ref path, out var _);
+            return this.TryGetMountOrNext(ref path, out var _);
         }
 
         private IFileSystem TryGetMountOrNext(ref UPath path, out UPath mountPath)
@@ -849,9 +850,9 @@ namespace Zio.FileSystems
             }
 
             IFileSystem mountfs = null;
-            lock (_mounts)
+            lock (this._mounts)
             {
-                foreach (var kvp in _mounts)
+                foreach (var kvp in this._mounts)
                 {
                     var remainingPath = GetRemaining(kvp.Key, path);
                     if (remainingPath.IsNull)
@@ -872,7 +873,7 @@ namespace Zio.FileSystems
             }
             
             mountPath = null;
-            return NextFileSystem;
+            return this.NextFileSystem;
         }
 
         /// <summary>
@@ -949,9 +950,9 @@ namespace Zio.FileSystems
 
             public SearchLocation(IFileSystem fileSystem, UPath prefix, UPath path)
             {
-                FileSystem = fileSystem;
-                Prefix = prefix;
-                Path = path;
+                this.FileSystem = fileSystem;
+                this.Prefix = prefix;
+                this.Path = path;
             }
         }
     }

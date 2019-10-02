@@ -31,7 +31,7 @@ namespace Zio
         /// </summary>
         public const char DirectorySeparator = '/';
 
-        private static InternalHelper InternalHelperTls => _internalHelperTls ?? (_internalHelperTls = new InternalHelper());
+        private static InternalHelper InternalHelperTls => _internalHelperTls ??= new InternalHelper();
 
         /// <summary>
         /// The default comparer for a <see cref="UPath"/> that is case sensitive.
@@ -55,12 +55,11 @@ namespace Zio
         {
             if (safe)
             {
-                FullName = path;
+                this.FullName = path;
             }
             else
             {
-                string errorMessage;
-                FullName = ValidateAndNormalize(path, out errorMessage);
+                this.FullName = ValidateAndNormalize(path, out var errorMessage);
                 if (errorMessage != null)
                     throw new ArgumentException(errorMessage, nameof(path));
             }
@@ -76,25 +75,25 @@ namespace Zio
         /// Gets a value indicating whether this path is null.
         /// </summary>
         /// <value><c>true</c> if this instance is null; otherwise, <c>false</c>.</value>
-        public bool IsNull => FullName == null;
+        public bool IsNull => this.FullName == null;
 
         /// <summary>
         /// Gets a value indicating whether this path is empty (<see cref="FullName"/> equals to the empty string)
         /// </summary>
         /// <value><c>true</c> if this instance is empty; otherwise, <c>false</c>.</value>
-        public bool IsEmpty => FullName == string.Empty;
+        public bool IsEmpty => this.FullName == string.Empty;
 
         /// <summary>
         /// Gets a value indicating whether this path is absolute by starting with a leading `/`.
         /// </summary>
         /// <value><c>true</c> if this path is absolute; otherwise, <c>false</c>.</value>
-        public bool IsAbsolute => FullName?.StartsWith("/") ?? false;
+        public bool IsAbsolute => this.FullName?.StartsWith("/") ?? false;
 
         /// <summary>
         /// Gets a value indicating whether this path is relative by **not** starting with a leading `/`.
         /// </summary>
         /// <value><c>true</c> if this instance is relative; otherwise, <c>false</c>.</value>
-        public bool IsRelative => !IsAbsolute;
+        public bool IsRelative => !this.IsAbsolute;
 
         /// <summary>
         /// Performs an implicit conversion from <see cref="System.String"/> to <see cref="UPath"/>.
@@ -170,12 +169,12 @@ namespace Zio
 
         public static UPath Combine(UPath path1, UPath path2, UPath path3)
         {
-            return UPath.Combine(UPath.Combine(path1, path2), path3);
+            return Combine(Combine(path1, path2), path3);
         }
 
         public static UPath Combine(UPath path1, UPath path2, UPath path3, UPath path4)
         {
-            return UPath.Combine(Combine(path1, path2), Combine(path3, path4));
+            return Combine(Combine(path1, path2), Combine(path3, path4));
         }
 
         public static UPath Combine(params UPath[] paths)
@@ -208,19 +207,19 @@ namespace Zio
         /// <inheritdoc />
         public bool Equals(UPath other)
         {
-            return string.Equals(FullName, other.FullName);
+            return string.Equals(this.FullName, other.FullName);
         }
 
         /// <inheritdoc />
         public override bool Equals(object obj)
         {
-            return obj is UPath && Equals((UPath) obj);
+            return obj is UPath path && this.Equals(path);
         }
 
         /// <inheritdoc />
         public override int GetHashCode()
         {
-            return FullName?.GetHashCode() ?? 0;
+            return this.FullName?.GetHashCode() ?? 0;
         }
 
         /// <summary>
@@ -248,7 +247,7 @@ namespace Zio
         /// <inheritdoc />
         public override string ToString()
         {
-            return FullName;
+            return this.FullName;
         }
 
         /// <summary>
@@ -259,8 +258,7 @@ namespace Zio
         /// <returns><c>true</c> if path was parsed successfully, <c>false</c> otherwise.</returns>
         public static bool TryParse(string path, out UPath pathInfo)
         {
-            string errorMessage;
-            path = ValidateAndNormalize(path, out errorMessage);
+            path = ValidateAndNormalize(path, out var errorMessage);
             pathInfo = errorMessage == null ? new UPath(path, true) : new UPath();
             return errorMessage == null;
         }
@@ -319,42 +317,40 @@ namespace Zio
                     if (c == '.')
                         dotCount++;
 
-                    if (c == DirectorySeparator || c == '\\')
+                    if (c != DirectorySeparator && c != '\\') continue;
+                    // optimization: If we don't expect to process the path
+                    // and we only have a trailing / or \\, then just perform
+                    // a substring on the path
+                    if (!processParts && i + 1 == path.Length)
+                        return path.Substring(0, path.Length - 1);
+
+                    if (c == '\\')
+                        processParts = true;
+
+                    var endIndex = i - 1;
+                    for (i++; i < path.Length; i++)
                     {
-                        // optimization: If we don't expect to process the path
-                        // and we only have a trailing / or \\, then just perform
-                        // a substring on the path
-                        if (!processParts && i + 1 == path.Length)
-                            return path.Substring(0, path.Length - 1);
-
-                        if (c == '\\')
+                        c = path[i];
+                        if (c == DirectorySeparator || c == '\\')
+                        {
+                            // If we have consecutive / or \\, we need to process parts
                             processParts = true;
-
-                        var endIndex = i - 1;
-                        for (i++; i < path.Length; i++)
-                        {
-                            c = path[i];
-                            if (c == DirectorySeparator || c == '\\')
-                            {
-                                // If we have consecutive / or \\, we need to process parts
-                                processParts = true;
-                                continue;
-                            }
-                            break;
+                            continue;
                         }
-
-                        if (endIndex >= lastIndex || endIndex == -1)
-                        {
-                            var part = new TextSlice(lastIndex, endIndex);
-                            parts.Add(part);
-
-                            // If the previous part had only dots, we need to process it
-                            if (part.Length == dotCount)
-                                processParts = true;
-                        }
-                        dotCount = c == '.' ? 1 : 0;
-                        lastIndex = i;
+                        break;
                     }
+
+                    if (endIndex >= lastIndex || endIndex == -1)
+                    {
+                        var part = new TextSlice(lastIndex, endIndex);
+                        parts.Add(part);
+
+                        // If the previous part had only dots, we need to process it
+                        if (part.Length == dotCount)
+                            processParts = true;
+                    }
+                    dotCount = c == '.' ? 1 : 0;
+                    lastIndex = i;
                 }
 
                 if (lastIndex < path.Length)
@@ -399,11 +395,9 @@ namespace Zio
                             var isValid = false;
                             for (var j = part.Start + 2; j <= part.End; j++)
                             {
-                                if (path[j] != '.')
-                                {
-                                    isValid = true;
-                                    break;
-                                }
+                                if (path[j] == '.') continue;
+                                isValid = true;
+                                break;
                             }
 
                             if (!isValid)
@@ -416,20 +410,16 @@ namespace Zio
                             continue;
                         }
 
-                        if (i - 1 >= 0)
+                        if (i - 1 < 0) continue;
+                        var previousSlice = parts[i - 1];
+                        if (IsDotDot(previousSlice, path)) continue;
+                        if (previousSlice.Length == 0)
                         {
-                            var previousSlice = parts[i - 1];
-                            if (!IsDotDot(previousSlice, path))
-                            {
-                                if (previousSlice.Length == 0)
-                                {
-                                    errorMessage = $"The path `{path}` cannot go to the parent (..) of a root path /";
-                                    return string.Empty;
-                                }
-                                parts.RemoveAt(i--);
-                                parts.RemoveAt(i--);
-                            }
+                            errorMessage = $"The path `{path}` cannot go to the parent (..) of a root path /";
+                            return string.Empty;
                         }
+                        parts.RemoveAt(i--);
+                        parts.RemoveAt(i--);
                     }
                 }
 
@@ -463,7 +453,7 @@ namespace Zio
             return path[slice.Start] == '.' && path[slice.End] == '.';
         }
 
-        private class InternalHelper
+        private sealed class InternalHelper
         {
             public readonly StringBuilder Builder;
 
@@ -471,8 +461,8 @@ namespace Zio
 
             public InternalHelper()
             {
-                Builder = new StringBuilder();
-                Slices = new List<TextSlice>();
+                this.Builder = new StringBuilder();
+                this.Slices = new List<TextSlice>();
             }
         }
 
@@ -480,24 +470,24 @@ namespace Zio
         {
             public TextSlice(int start, int end)
             {
-                Start = start;
-                End = end;
+                this.Start = start;
+                this.End = end;
             }
 
             public readonly int Start;
 
             public readonly int End;
 
-            public int Length => End - Start + 1;
+            public int Length => this.End - this.Start + 1;
         }
 
         /// <inheritdoc />
         public int CompareTo(UPath other)
         {
-            return string.Compare(FullName, other.FullName, StringComparison.Ordinal);
+            return string.Compare(this.FullName, other.FullName, StringComparison.Ordinal);
         }
 
-        private class ComparerCaseSensitive : IComparer<UPath>
+        private sealed class ComparerCaseSensitive : IComparer<UPath>
         {
             public int Compare(UPath x, UPath y)
             {
@@ -505,7 +495,7 @@ namespace Zio
             }
         }
 
-        private class ComparerIgnoreCase : IComparer<UPath>
+        private sealed class ComparerIgnoreCase : IComparer<UPath>
         {
             public int Compare(UPath x, UPath y)
             {

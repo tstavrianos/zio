@@ -37,13 +37,15 @@ namespace Zio.Tests.FileSystems
                 {
                     info.Attributes = FileAttributes.Normal;
                 }
-                if (info is FileInfo)
+
+                if (!(info is FileInfo)) continue;
+                try
                 {
-                    try
-                    {
-                        info.Delete();
-                    }
-                    catch { }
+                    info.Delete();
+                }
+                catch
+                {
+                    // ignored
                 }
             }
 
@@ -51,7 +53,10 @@ namespace Zio.Tests.FileSystems
             {
                 dir.Delete(true);
             }
-            catch {}
+            catch
+            {
+                // ignored
+            }
         }
     }
 }

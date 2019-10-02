@@ -21,10 +21,10 @@ namespace Zio.FileSystems
         /// <exception cref="DirectoryNotFoundException">If the directory subPath does not exist in the delegate FileSystem</exception>
         public SubFileSystem(IFileSystem fileSystem, UPath subPath, bool owned = true) : base(fileSystem, owned)
         {
-            SubPath = subPath.AssertAbsolute(nameof(subPath));
-            if (!fileSystem.DirectoryExists(SubPath))
+            this.SubPath = subPath.AssertAbsolute(nameof(subPath));
+            if (!fileSystem.DirectoryExists(this.SubPath))
             {
-                throw NewDirectoryNotFoundException(SubPath);
+                throw NewDirectoryNotFoundException(this.SubPath);
             }
         }
 
@@ -47,17 +47,17 @@ namespace Zio.FileSystems
             public Watcher(SubFileSystem fileSystem, UPath path, IFileSystemWatcher watcher)
                 : base(fileSystem, path, watcher)
             {
-                _fileSystem = fileSystem;
+                this._fileSystem = fileSystem;
             }
 
             protected override UPath? TryConvertPath(UPath pathFromEvent)
             {
-                if (!pathFromEvent.IsInDirectory(_fileSystem.SubPath, true))
+                if (!pathFromEvent.IsInDirectory(this._fileSystem.SubPath, true))
                 {
                     return null;
                 }
 
-                return _fileSystem.ConvertPathFromDelegate(pathFromEvent);
+                return this._fileSystem.ConvertPathFromDelegate(pathFromEvent);
             }
         }
 
@@ -65,21 +65,21 @@ namespace Zio.FileSystems
         protected override UPath ConvertPathToDelegate(UPath path)
         {
             var safePath = path.ToRelative();
-            return SubPath / safePath;
+            return this.SubPath / safePath;
         }
 
         /// <inheritdoc />
         protected override UPath ConvertPathFromDelegate(UPath path)
         {
             var fullPath = path.FullName;
-            if (!fullPath.StartsWith(SubPath.FullName) || (fullPath.Length > SubPath.FullName.Length && fullPath[SubPath.FullName.Length] != UPath.DirectorySeparator))
+            if (!fullPath.StartsWith(this.SubPath.FullName) || (fullPath.Length > this.SubPath.FullName.Length && fullPath[this.SubPath.FullName.Length] != UPath.DirectorySeparator))
             {
                 // More a safe guard, as it should never happen, but if a delegate filesystem doesn't respect its root path
                 // we are throwing an exception here
-                throw new InvalidOperationException($"The path `{path}` returned by the delegate filesystem is not rooted to the subpath `{SubPath}`");
+                throw new InvalidOperationException($"The path `{path}` returned by the delegate filesystem is not rooted to the subpath `{this.SubPath}`");
             }
 
-            var subPath = fullPath.Substring(SubPath.FullName.Length);
+            var subPath = fullPath.Substring(this.SubPath.FullName.Length);
             return subPath == string.Empty ? UPath.Root : new UPath(subPath, true);
         }
     }
