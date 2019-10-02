@@ -6,10 +6,10 @@ Zio provides a simple, powerful, cross-platform **filesystem abstraction for .NE
 
 ## Features
 
-- Compatible with `.NET 4.0`, `4.5+` and the cross platform `.NET Core/Standard 1.3+`
+- Compatible with the cross platform `.NET Core 3.0+`
 - API providing all operations provided by the regular System.IO API (e.g File.Move, Directory.Delete... etc.)
   - Allowing atomic filesystem operations (e.g File.Replace...)
-- A simple interface abstraction [`IFileSystem`](src/Zio/IFileSystem.cs)
+- A simple interface abstraction [`IFileSystem`](src/Zio/IFileSystem.cs), [`IReadOnlyFileSystem`](src/Zio/IReadOnlyFileSystem.cs)
 - Supports for filesystem watcher through the `IFileSystem.Watch` method and the [`IFileSystemWatcher`](src/Zio/IFileSystemWatcher.cs) interface
   - For all builtin filesystems (aggregates, memory...etc.)
 - All paths are normalized through a lightweight uniform path struct [`UPath`](src/Zio/UPath.cs)
@@ -68,7 +68,7 @@ In order to build Zio, you need to install Visual Studio 2017 with latest [.NET 
 
 ## TODO
 
-- [ ] Add support for ZipArchive (readonly, readwrite)
+- [ ] Add support for ZipArchive (~~readonly~~, readwrite)
 - [ ] Add support for Git FileSystem (readonly)
 
 ## License
