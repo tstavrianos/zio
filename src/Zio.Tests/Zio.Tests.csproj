@@ -3,6 +3,8 @@
   <PropertyGroup>    
     <TargetFramework>netcoreapp3.0</TargetFramework>
     <DebugType>Full</DebugType>
+    <Configurations>Release;Debug</Configurations>
+    <Platforms>x64;x86</Platforms>
   </PropertyGroup>
 
   <ItemGroup>

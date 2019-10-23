@@ -15,9 +15,7 @@
     <PackageProjectUrl>https://github.com/xoofx/zio</PackageProjectUrl>
     <PackageLicenseUrl>https://github.com/xoofx/zio/blob/master/license.txt</PackageLicenseUrl>
     <DebugType>Full</DebugType>
-  </PropertyGroup>
-
-  <PropertyGroup Condition="'$(Configuration)'=='Release'">
-    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <Configurations>Release;Debug</Configurations>
+    <Platforms>x64;x86</Platforms>
   </PropertyGroup>
 </Project>
